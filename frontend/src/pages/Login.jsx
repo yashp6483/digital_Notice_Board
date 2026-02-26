@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Card, Button } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import loginImg from "../online-learning-class-illustration.png";
+import Swal from "sweetalert2";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 
@@ -22,21 +23,32 @@ function Login() {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
         body: JSON.stringify({ email, password, role }),
       });
-
-      if (res.status === 401) {
-        localStorage.clear();
-        window.location.href = "/login";
-        return;
-      }
+      
       const data = await res.json();
 
       if (!res.ok) {
-        alert(data.message || "Invalid credentials");
+        Swal.fire({
+          icon: "error",
+          title: "Login Failed",
+          text: data.message || "Invalid credentials",
+          confirmButtonColor: "#d33",
+        });
+
+        localStorage.removeItem("token");
+        localStorage.removeItem("role");
         return;
       }
 
       localStorage.setItem("token", data.token);
       localStorage.setItem("role", data.role);
+
+      Swal.fire({
+        icon: "success",
+        title: "Login Successful",
+        text: "Welcome back!",
+        timer: 1500,
+        showConfirmButton: false,
+      });
 
       if (data.role === "admin") {
         navigate("/admin-dashboard")

@@ -1,12 +1,37 @@
 import React, { useState } from "react";
+import Swal from "sweetalert2";
 import { Link } from "react-router-dom";
 
 export default function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   const logout = () => {
-    localStorage.clear();
-    window.location.href = "/login";
+    Swal.fire({
+      title: "Are you sure?",
+      text: "You will be logged out of your account",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, Logout",
+      cancelButtonText: "Cancel",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        localStorage.clear();
+
+        Swal.fire({
+          icon: "success",
+          title: "Logged Out",
+          text: "You have been successfully logged out",
+          timer: 1200,
+          showConfirmButton: false,
+        });
+
+        setTimeout(() => {
+          window.location.href = "/login";
+        }, 1200);
+      }
+    });
   };
 
   const toggleSidebar = () => {
@@ -50,9 +75,9 @@ export default function Sidebar() {
         <li className="nav-item">
           <Link
             className={`nav-link text-white d-flex align-items-center px-2 px-md-3 ${isCollapsed ? "justify-content-center" : "justify-content-start"}`}
-            to="/notices"
+            to="/admin/notices"
           >
-            <i className={`fa-solid fa-bullhorn ${isCollapsed ? "" : "me-2"}`}></i>
+            <i className={`fa-solid fa-bullhorn ${isCollapsed ? "" : "me-2"}`} ></i>
             {!isCollapsed && <span>Notices</span>}
           </Link>
         </li>
@@ -60,7 +85,7 @@ export default function Sidebar() {
         <li className="nav-item">
           <Link
             className={`nav-link text-white d-flex align-items-center px-2 px-md-3 ${isCollapsed ? "justify-content-center" : "justify-content-start"}`}
-            to="/professors"
+            to="/admin/professors"
           >
             <i className={`fa-solid fa-user-tie ${isCollapsed ? "" : "me-2"}`}></i>
             {!isCollapsed && <span>Professors</span>}
@@ -70,7 +95,7 @@ export default function Sidebar() {
         <li className="nav-item">
           <Link
             className={`nav-link text-white d-flex align-items-center px-2 px-md-3 ${isCollapsed ? "justify-content-center" : "justify-content-start"}`}
-            to="/categories"
+            to="/admin/categories"
           >
             <i className={`fa-solid fa-layer-group ${isCollapsed ? "" : "me-2"}`}></i>
             {!isCollapsed && <span>Categories</span>}
@@ -80,7 +105,7 @@ export default function Sidebar() {
         <li className="nav-item">
           <Link
             className={`nav-link text-white d-flex align-items-center px-2 px-md-3 ${isCollapsed ? "justify-content-center" : "justify-content-start"}`}
-            to="/display"
+            to="/admin/display"
           >
             <i className={`fa-solid fa-display ${isCollapsed ? "" : "me-2"}`}></i>
             {!isCollapsed && <span>Display Controls</span>}
@@ -90,7 +115,7 @@ export default function Sidebar() {
         <li className="nav-item">
           <Link
             className={`nav-link text-white d-flex align-items-center px-2 px-md-3 ${isCollapsed ? "justify-content-center" : "justify-content-start"}`}
-            to="/reports"
+            to="/admin/reports"
           >
             <i className={`fa-solid fa-file-lines ${isCollapsed ? "" : "me-2"}`}></i>
             {!isCollapsed && <span>Reports</span>}
@@ -100,7 +125,7 @@ export default function Sidebar() {
         <li className="nav-item">
           <Link
             className={`nav-link text-white d-flex align-items-center px-2 px-md-3 ${isCollapsed ? "justify-content-center" : "justify-content-start"}`}
-            to="/settings"
+            to="/admin/settings"
           >
             <i className={`fa-solid fa-gear ${isCollapsed ? "" : "me-2"}`}></i>
             {!isCollapsed && <span>Settings</span>}

@@ -1,7 +1,11 @@
 import React from "react";
 import { Card, Table, Badge, Button } from "react-bootstrap";
+import {useNavigate } from "react-router-dom";
 
 export default function RecentNotices() {
+
+  const navigate = useNavigate();
+
   const notices = [
     { title: "Exam Schedule Update", category: "Exam", date: "1 day ago" },
     { title: "Emergency Lockdown Drill", category: "Emergency", date: "1 day ago" },
@@ -22,7 +26,7 @@ export default function RecentNotices() {
     <Card className="h-100 shadow-sm">
       <Card.Body>
         <div className="d-flex justify-content-between align-items-center mb-3">
-          <Card.Title className="fw-bold mb-0">Recent Notices</Card.Title>
+          <Card.Title className="fw-bold mb-0">Notices</Card.Title>
           <i className="fa-solid fa-ellipsis"></i>
         </div>
 
@@ -50,7 +54,7 @@ export default function RecentNotices() {
         </Table>
 
         <div className="text-center">
-          <Button variant="primary" size="sm">
+          <Button variant="primary" size="sm" onClick={()=>navigate("/admin/notices")}>
             View All Notices →
           </Button>
         </div>
