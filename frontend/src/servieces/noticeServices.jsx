@@ -1,0 +1,84 @@
+export const fetchNotice = async () => {
+    const token = localStorage.getItem("token")
+    if (!token) {
+        throw new Error("No token found");
+    }
+
+    const res = await fetch("http://localhost:5000/admin/notices", {
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    })
+
+    const data = await res.json()
+
+    if (!res.ok) {
+        alert(data.message || data.err || "Failed to fetch notices")
+        return
+    }
+    return data.notices || [];
+}
+
+export const mapNoticeForTable = (notice) => ({
+    ...notice,
+    documentUrl: resolveDocumentUrl(
+        notice.documentUrl ||
+        notice.document?.url ||
+        notice.fileUrl ||
+        notice.attachmentUrl ||
+        notice.document
+    ),
+    publishedAt: formatDate(notice.publishedAt),
+    professor: notice.createdBy?.name || notice.professor || "-",
+    status: notice.status === "inactive" ? "Inactive" : "Active"
+})
+
+export const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:5000";
+
+export const resolveDocumentUrl = (value) => {
+    if (!value || typeof value !== "string") return null;
+
+    const url = value.trim().replace(/\\/g, "/");
+    if (!url) return null;
+
+    // Local absolute Windows paths are not browser-accessible URLs.
+    if (/^[A-Za-z]:\//.test(url)) return null;
+
+    if (/^https?:\/\//i.test(url)) return url;
+    if (url.startsWith("//")) return `${window.location.protocol}${url}`;
+    if (url.startsWith("/")) return `${API_BASE_URL}${url}`;
+
+    return `${API_BASE_URL}/${url}`;
+};
+
+export const formatDate = (value) => {
+    if (!value) return "-";
+
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "-";
+
+    const day = String(date.getDate()).padStart(2, "0");   // ✅ 01–31
+    const month = String(date.getMonth() + 1).padStart(2, "0"); // ✅ 01–12
+    const year = date.getFullYear();
+
+    return `${day}-${month}-${year}`;
+};
+
+export const deleteNotice = async (id) => {
+    const token = localStorage.getItem("token")
+    if (!token) {
+        throw new Error("No token found");
+    }
+    const res = await fetch(`http://localhost:5000/admin/notice/delete/${id}`, {
+        method: "DELETE",
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) throw new Error(data.message || "Delete failed");
+
+    return data;
+};

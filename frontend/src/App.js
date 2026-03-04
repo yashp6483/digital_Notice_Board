@@ -5,6 +5,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import ProfessorDashboard from './pages/ProfessorDashboard';
 import ProtectedRoute from './components/ProtectedRoutes';
 import AdminNotice from './pages/AdminNotice';
+import DocumentView from './components/DocumentViewerModal';
 
 function App() {
   return (
@@ -13,7 +14,9 @@ function App() {
       <Route path="/" element={<Login />} />
       {/* login route  */}
       <Route path='/login' element={<Login />} />
+      <Route path='/document-view' element={<DocumentView/>}/>
       <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
+        <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
       </Route>
       <Route element={<ProtectedRoute allowedRoles={["professor"]} />}>

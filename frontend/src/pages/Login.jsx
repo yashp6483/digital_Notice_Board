@@ -23,7 +23,7 @@ function Login() {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
         body: JSON.stringify({ email, password, role }),
       });
-      
+
       const data = await res.json();
 
       if (!res.ok) {
@@ -33,14 +33,15 @@ function Login() {
           text: data.message || "Invalid credentials",
           confirmButtonColor: "#d33",
         });
-
         localStorage.removeItem("token");
         localStorage.removeItem("role");
         return;
       }
 
+      localStorage.setItem("name", data.name);
       localStorage.setItem("token", data.token);
       localStorage.setItem("role", data.role);
+
 
       Swal.fire({
         icon: "success",

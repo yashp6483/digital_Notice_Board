@@ -1,20 +1,24 @@
 const jwt = require("jsonwebtoken");
-function verifyToken(req, res, next){
-    const authHeader = req.headers.authorization;
+function verifyToken(req, res, next) {
+  const authHeader = req.headers.authorization;
 
-    if(!authHeader){
-        return res.status(403).json({message: "Token is required"});
+  if (!authHeader) {
+    return res.status(403).json({ message: "Token is required" });
+  }
+
+  const token = authHeader.split(" ")[1];
+
+  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+    if (err) {
+      return res.status(401).json({ message: "Invalid or Expired token" });
     }
-
-    const token = authHeader.split(" ")[1];
-
-    jwt.verify(token, process.env.JWT_SECRET,(err,decoded)=>{
-        if(err){
-            return res.status(401).json({message: "Invalid or Expired token"});
-        }
-        req.user = decoded;
-        next();
-    });
+    req.user = {
+      _id: decoded.userId,
+      role: decoded.role,
+      name: decoded.name
+    };
+    next();
+  });
 };
 
 function authorize(...roles) {
@@ -26,4 +30,4 @@ function authorize(...roles) {
   };
 }
 
-module.exports = {verifyToken,authorize};
+module.exports = { verifyToken, authorize };

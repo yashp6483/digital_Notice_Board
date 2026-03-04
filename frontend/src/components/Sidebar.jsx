@@ -140,7 +140,7 @@ export default function Sidebar() {
         <div className={`d-flex align-items-center gap-2 ${isCollapsed ? "justify-content-center" : "justify-content-start"}`}>
           <i className="fa-solid fa-circle-user fs-3"></i>
           {!isCollapsed && <div>
-            <div className="fw-semibold">Admin Name</div>
+            <div className="fw-semibold">{localStorage.getItem("name")}</div>
             <button
               onClick={logout}
               className="btn btn-sm btn-light mt-1"

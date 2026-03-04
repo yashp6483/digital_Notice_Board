@@ -34,7 +34,7 @@ app.post("/login", async (req, res) => {
     return res.status(401).json({ message: "Invalid Password" });
   }
 
-  if (user.role !== role) { 
+  if (user.role !== role) {
     return res.status(403).json({ message: "Selected role does not match account role" });
   }
 
@@ -44,7 +44,7 @@ app.post("/login", async (req, res) => {
     { expiresIn: "1h" }
   );
 
-  res.json({ token, role: user.role });
+  res.json({ token, name: user.name, role: user.role });
 });
 
 // admin routes
@@ -52,6 +52,10 @@ app.use("/admin", require("./Routes/adminRoutes"));
 
 // professor routes
 app.use("/professor-dashboard", require("./Routes/professorRoutes"));
+
+// notice routes
+app.use("/admin", require("./Routes/noticeRoutes"));
+
 
 // port listening
 app.listen(process.env.PORT, () => {

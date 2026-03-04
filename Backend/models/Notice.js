@@ -40,7 +40,7 @@ const noticeSchema = new mongoose.Schema({
         type : mongoose.Schema.Types.ObjectId,
         ref : "User"    
     },
-    idDeleted : {
+    isDeleted : {
         type : Boolean,
         default : false
     }

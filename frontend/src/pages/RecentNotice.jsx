@@ -1,26 +1,41 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Card, Table, Badge, Button } from "react-bootstrap";
-import {useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { categoryVariant } from "../constants/categoryVariant";
+import { fetchNotice, mapNoticeForTable } from "../servieces/noticeServices";
 
 export default function RecentNotices() {
 
   const navigate = useNavigate();
 
-  const notices = [
-    { title: "Exam Schedule Update", category: "Exam", date: "1 day ago" },
-    { title: "Emergency Lockdown Drill", category: "Emergency", date: "1 day ago" },
-    { title: "Guest Lecture by Dr. Smith", category: "Academic", date: "1 day ago" },
-    { title: "Campus Networking Event", category: "Event", date: "2 days ago" },
-    { title: "Holiday Announcement", category: "General", date: "2 days ago" },
-  ];
+  const [notices, setNotices] = useState([
+    { title: "Exam Schedule Update", category: "Exam", publishedAt: "1 day ago", status: "Active", professor: "Dr. Johnson" },
+    { title: "Emergency Lockdown Drill", category: "Emergency", publishedAt: "1 day ago", status: "Active", professor: "Dr. Johnson" },
+    { title: "Guest Lecture by Dr. Smith", category: "Academic", publishedAt: "1 day ago", status: "Inactive", professor: "Dr. Johnson" },
+    { title: "Campus Networking Event", category: "Event", publishedAt: "2 days ago", status: "Inactive", professor: "Dr. Johnson" },
+    { title: "Holiday Announcement", category: "General", publishedAt: "2 days ago", status: "Active", professor: "Dr. Johnson" }
+  ])
+  const [loading, setLoading] = useState(false)
 
-  const categoryVariant = {
-    Exam: "primary",
-    Emergency: "danger",
-    Academic: "info",
-    Event: "success",
-    General: "secondary",
+  const fetchNotices = async () => {
+    setLoading(true);
+    try {
+      const noticesFromApi = await fetchNotice();
+      const list = noticesFromApi.map(mapNoticeForTable);
+      if (list.length > 0) {
+        setNotices(list)
+      }
+    } catch (error) {
+      console.error(error);
+      alert(error.message);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  useEffect(() => {
+    fetchNotices()
+  }, [])
 
   return (
     <Card className="h-100 shadow-sm">
@@ -33,28 +48,35 @@ export default function RecentNotices() {
         <Table responsive borderless className="align-middle">
           <thead className="text-muted small">
             <tr>
+              <th>No.</th>
               <th>Notice</th>
               <th>Category</th>
               <th>Date</th>
             </tr>
           </thead>
           <tbody>
-            {notices.map((item, index) => (
-              <tr key={index}>
-                <td>{item.title}</td>
+            {!loading && notices.length === 0 && (
+              <tr>
+                <td colSpan={8} className="text-center text-muted">No notices found</td>
+              </tr>
+            )}
+            {notices.map((n, i) => (
+              <tr key={i}>
+                <td>{i + 1}</td>
+                <td>{n.title}</td>
                 <td>
-                  <Badge bg={categoryVariant[item.category]} pill>
-                    {item.category}
+                  <Badge bg={categoryVariant[n.category]}>
+                    {n.category}
                   </Badge>
                 </td>
-                <td className="text-muted small">{item.date}</td>
+                <td>{n.publishedAt}</td>
               </tr>
             ))}
           </tbody>
         </Table>
 
         <div className="text-center">
-          <Button variant="primary" size="sm" onClick={()=>navigate("/admin/notices")}>
+          <Button variant="primary" size="sm" onClick={() => navigate("/admin/notices")}>
             View All Notices →
           </Button>
         </div>
