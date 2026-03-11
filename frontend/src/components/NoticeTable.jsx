@@ -2,11 +2,15 @@ import React from 'react'
 import { Badge, Button, Card, Table } from 'react-bootstrap'
 import NoticeAdd from './NoticeAdd'
 import { categoryVariant } from '../constants/categoryVariant'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import DocumentViewerModal from "./DocumentViewerModal";
 import { deleteNotice, fetchNotice, mapNoticeForTable } from '../servieces/noticeServices'
+import { useNavigate } from 'react-router-dom'
 
 export default function NoticeTable() {
+  const navigate = useNavigate();
+  const [editNotice, setEditNotice] = useState(null);
+
   const [showAddModal, setShowAddModal] = useState(false)
   const [notices, setNotices] = useState([
     { title: "Exam Schedule Update", category: "Exam", publishedAt: "1 day ago", status: "Active", professor: "Dr. Johnson" },
@@ -18,7 +22,7 @@ export default function NoticeTable() {
   const [loading, setLoading] = useState(false)
   const [showModal, setShowModal] = useState(false);
   const [selectedDoc, setSelectedDoc] = useState(null);
-  const fetchNotices = async () => {
+  const fetchNotices = useCallback(async () => {
     setLoading(true);
     try {
       const noticesFromApi = await fetchNotice();
@@ -28,11 +32,18 @@ export default function NoticeTable() {
       }
     } catch (error) {
       console.error(error);
+      if (error.status === 401 || error.status === 403) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("role");
+        localStorage.removeItem("name");
+        navigate("/unauthorized");
+        return;
+      }
       alert(error.message);
     } finally {
       setLoading(false);
     }
-  };
+  }, [navigate]);
 
 
   // notice delete code 
@@ -47,16 +58,20 @@ export default function NoticeTable() {
       ); // ✅ auto refresh
       await fetchNotice();
     } catch (error) {
+      if (error.status === 401 || error.status === 403) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("role");
+        localStorage.removeItem("name");
+        navigate("/unauthorized");
+        return;
+      }
       alert(error.message);
     }
   };
 
   useEffect(() => {
     fetchNotices()
-  }, [])
-  const handleAddNotice = async () => {
-    await fetchNotices();   // 🔥 always get latest from DB
-  }
+  }, [fetchNotices])
 
   return (
     <Card className="shadow-sm">
@@ -124,7 +139,10 @@ export default function NoticeTable() {
                     {/* Edit Button */}
                     <button
                       className="btn btn-warning btn-sm"
-
+                      onClick={() => {
+                        setEditNotice(n);
+                        setShowAddModal(true);
+                      }}
                     >
                       <i className="fa-solid fa-pen"></i>
                     </button>
@@ -145,9 +163,15 @@ export default function NoticeTable() {
         </Table>
         <NoticeAdd
           show={showAddModal}
-          onClose={() => setShowAddModal(false)}
-          onSubmit={handleAddNotice}
+          onClose={() => {
+            setShowAddModal(false);
+            setEditNotice(null);
+          }}
+          onSubmit={fetchNotices}
+          mode={editNotice ? "edit" : "add"}
+          notice={editNotice}
         />
+
         <DocumentViewerModal
           show={showModal}
           onHide={() => setShowModal(false)}

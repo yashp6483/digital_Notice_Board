@@ -5,3 +5,5 @@ export const categoryVariant = {
   Event: "success",
   General: "secondary",
 };
+
+export const Department = ["Computer Engineering","Mechenical Engineering","Civil Engineering","Electical Engineering","Electronics and comunication"];

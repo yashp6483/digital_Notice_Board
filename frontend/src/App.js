@@ -6,6 +6,8 @@ import ProfessorDashboard from './pages/ProfessorDashboard';
 import ProtectedRoute from './components/ProtectedRoutes';
 import AdminNotice from './pages/AdminNotice';
 import DocumentView from './components/DocumentViewerModal';
+import Unauthorized from './pages/Unauthorized';
+import AdminProfessor from './pages/AdminProfessor';
 
 function App() {
   return (
@@ -14,6 +16,7 @@ function App() {
       <Route path="/" element={<Login />} />
       {/* login route  */}
       <Route path='/login' element={<Login />} />
+      <Route path='/unauthorized' element={<Unauthorized />} />
       <Route path='/document-view' element={<DocumentView/>}/>
       <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
         <Route path="/admin" element={<AdminDashboard />} />
@@ -22,8 +25,9 @@ function App() {
       <Route element={<ProtectedRoute allowedRoles={["professor"]} />}>
         <Route path='/professor-dashboard' element={<ProfessorDashboard />} />
       </Route>
-      <Route element={<ProtectedRoute allowedRoles={["admin", "professor"]} />}>
+      <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
         <Route path='/admin/notices' element={<AdminNotice />} />
+        <Route path='/admin/professors' element={<AdminProfessor />} />
       </Route>
     </Routes>
   );

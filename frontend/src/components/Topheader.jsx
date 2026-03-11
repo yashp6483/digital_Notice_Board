@@ -3,6 +3,7 @@ import React from 'react'
 export default function TopHeader() {
     const hours = new Date().getHours();
     let greeting = "Good Morning";
+    const name = localStorage.getItem("name");
 
     if (hours >= 12 && hours < 17) greeting = "Good Afternoon";
     else if (hours >= 17) greeting = "Good Evening";
@@ -11,7 +12,7 @@ export default function TopHeader() {
         
         <div className="rounded d-flex justify-content-between align-items-center">
             <div>
-                <h4 className="fw-bold">{greeting}, Admin! 👋</h4>
+                <h4 className="fw-bold">{greeting}, {name}! 👋</h4>
                 <span className="text-primary">
                     Admin 
                 </span>

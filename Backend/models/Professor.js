@@ -14,11 +14,6 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
-    department: {
-        type: String,
-        enum: ["Computer Engineering", "Mechenical Engineering", "Civil Engineering", "Electical Engineering", "Electronics and comunication"],
-        default: "Computer Engineering"
-    },
     status: {
         type: String,
         enum: ["active", "inactive"],
@@ -32,6 +27,6 @@ const userSchema = new mongoose.Schema({
         enum: ["admin", "professor"],
         required: true
     }
-}, { timestamps: true });
+})
 
 module.exports = mongoose.model("User", userSchema);

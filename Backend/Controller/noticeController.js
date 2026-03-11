@@ -44,20 +44,59 @@ exports.getNotices = async (req, res) => {
     }
 };
 
-exports.deleteNotice = async(req,res)=>{
-    try{
-        const {id} = req.params;
+exports.deleteNotice = async (req, res) => {
+    try {
+        const { id } = req.params;
 
         const deletedNotice = await Notice.findByIdAndDelete(id);
 
-        if(!deletedNotice){
-            return res.status(404).json({ message: "NO NOTICE FOUND"});
+        if (!deletedNotice) {
+            return res.status(404).json({ message: "NO NOTICE FOUND" });
         }
 
         res.status(200).json({
-            message:"Notice deleted successfully",
+            message: "Notice deleted successfully",
         })
-    }catch(error){
-        res.status(500).json({ message: "Delete failed", error});
+    } catch (error) {
+        res.status(500).json({ message: "Delete failed", error });
     }
 }
+
+exports.updateNotice = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const updateData = {
+            title: req.body.title,
+            category: req.body.category,
+            publishedAt: req.body.publishedAt,
+            status: req.body.status,
+            description: req.body.description
+        };
+
+        if (req.file) {
+            updateData.document = req.file.filename;
+        }
+
+        const notice = await Notice.findByIdAndUpdate(
+            id,
+            updateData,
+            { returnDocument: "after" }
+        );
+
+        if (!notice) {
+            return res.status(404).json({ message: "Notice not found" });
+        }
+
+        res.json({
+            message: "Notice updated successfully",
+            notice
+        });
+
+    } catch (err) {
+        res.status(500).json({
+            message: "Update failed",
+            err: err.message
+        });
+    }
+};

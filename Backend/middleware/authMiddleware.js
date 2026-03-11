@@ -2,15 +2,15 @@ const jwt = require("jsonwebtoken");
 function verifyToken(req, res, next) {
   const authHeader = req.headers.authorization;
 
-  if (!authHeader) {
-    return res.status(403).json({ message: "Token is required" });
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ message: "Unauthorized" });
   }
 
   const token = authHeader.split(" ")[1];
 
   jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
     if (err) {
-      return res.status(401).json({ message: "Invalid or Expired token" });
+      return res.status(401).json({ message: "Unauthorized" });
     }
     req.user = {
       _id: decoded.userId,

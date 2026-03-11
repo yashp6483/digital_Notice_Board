@@ -20,7 +20,6 @@ function Login() {
       const res = await fetch("http://localhost:5000/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
         body: JSON.stringify({ email, password, role }),
       });
 
@@ -41,7 +40,6 @@ function Login() {
       localStorage.setItem("name", data.name);
       localStorage.setItem("token", data.token);
       localStorage.setItem("role", data.role);
-
 
       Swal.fire({
         icon: "success",

@@ -1,7 +1,9 @@
 export const fetchNotice = async () => {
     const token = localStorage.getItem("token")
     if (!token) {
-        throw new Error("No token found");
+        const error = new Error("Unauthorized");
+        error.status = 401;
+        throw error;
     }
 
     const res = await fetch("http://localhost:5000/admin/notices", {
@@ -13,8 +15,9 @@ export const fetchNotice = async () => {
     const data = await res.json()
 
     if (!res.ok) {
-        alert(data.message || data.err || "Failed to fetch notices")
-        return
+        const error = new Error(data.message || data.err || "Failed to fetch notices");
+        error.status = res.status;
+        throw error;
     }
     return data.notices || [];
 }
@@ -67,7 +70,9 @@ export const formatDate = (value) => {
 export const deleteNotice = async (id) => {
     const token = localStorage.getItem("token")
     if (!token) {
-        throw new Error("No token found");
+        const error = new Error("Unauthorized");
+        error.status = 401;
+        throw error;
     }
     const res = await fetch(`http://localhost:5000/admin/notice/delete/${id}`, {
         method: "DELETE",
@@ -78,7 +83,33 @@ export const deleteNotice = async (id) => {
 
     const data = await res.json();
 
-    if (!res.ok) throw new Error(data.message || "Delete failed");
+    if (!res.ok) {
+        const error = new Error(data.message || "Delete failed");
+        error.status = res.status;
+        throw error;
+    }
+
+    return data;
+};
+
+export const updateNotice = async (id, formData) => {
+    const token = localStorage.getItem("token");
+
+    const res = await fetch(`http://localhost:5000/admin/notice/update/${id}`, {
+        method: "PUT",
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+        body: formData
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+        const error = new Error(data.message || "Update failed");
+        error.status = res.status;
+        throw error;
+    }
 
     return data;
 };

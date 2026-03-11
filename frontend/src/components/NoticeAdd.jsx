@@ -1,186 +1,137 @@
-import React, { useState } from 'react'
-import { Button, Form, Modal } from 'react-bootstrap'
-import { categoryVariant } from '../constants/categoryVariant'
+import React, { useState, useEffect } from "react";
+import { Modal, Form, Button } from "react-bootstrap";
+import { categoryVariant } from "../constants/categoryVariant";
 
-export default function NoticeAdd({ show, onClose, onSubmit }) {
+export default function NoticeAdd({ show, onClose, onSubmit, mode = "add", notice }) {
 
-    const today = new Date().toISOString().split("T")[0]
-    const initialForm = {
+    const today = new Date().toISOString().split("T")[0];
+
+    const [form, setForm] = useState({
         title: "",
         category: "General",
         publishedAt: today,
         status: "active",
         description: "",
-        document: null,
-        documentName: ""
-    }
+        document: null
+    });
 
-    const [form, setForm] = useState(initialForm)
+    useEffect(() => {
+        if (mode === "edit" && notice) {
+            setForm({
+                title: notice.title || "",
+                category: notice.category || "General",
+                publishedAt: notice.publishedAt || today,
+                status: notice.status?.toLowerCase() || "active",
+                description: notice.description || "",
+                document: null
+            });
+        }
+    }, [notice, mode, today ]);
 
     const handleChange = (e) => {
-        const { name, value, files } = e.target
-
-        if (name === "document") {
-            setForm(prev => ({
-                ...prev,
-                document: files[0],
-                documentName: files[0]?.name || ""
-            }))
-        } else {
-            setForm(prev => ({
-                ...prev,
-                [name]: value
-            }))
-        }
-    }
+        const { name, value, files } = e.target;
+        setForm(prev => ({
+            ...prev,
+            [name]: files ? files[0] : value
+        }));
+    };
 
     const handleSubmit = async (e) => {
-        e.preventDefault()
+        e.preventDefault();
 
-        const token = localStorage.getItem("token")
-        if (!token) {
-            alert("Please login again")
-            return
-        }
+        const token = localStorage.getItem("token");
+        if (!token) return alert("Please login again");
 
-        const formData = new FormData()
-        formData.append("title", form.title.trim())
-        formData.append("category", form.category)
-        formData.append("publishedAt", form.publishedAt)
-        formData.append("status", form.status)
+        const formData = new FormData();
+        Object.keys(form).forEach(key => {
+            if (form[key]) formData.append(key, form[key]);
+        });
 
-        formData.append("description", form.description.trim())
+        const url = mode === "edit"
+            ? `http://localhost:5000/admin/notice/update/${notice._id}`
+            : "http://localhost:5000/admin/notice";
 
-        if (form.document) {
-            formData.append("document", form.document)
-        }
+        const method = mode === "edit" ? "PUT" : "POST";
 
         try {
-            const res = await fetch("http://localhost:5000/admin/notice", {
-                method: "POST",
-                headers: {
-                    Authorization: `Bearer ${token}`
-                },
+            const res = await fetch(url, {
+                method,
+                headers: { Authorization: `Bearer ${token}` },
                 body: formData
-            })
+            });
 
-            let data = {}
-            try {
-                data = await res.json()
-            } catch {
-                data = {}
-            }
+            const data = await res.json();
 
-            if (!res.ok) {
-                alert(data.message || data.err || "Failed to add notice")
-                return
-            }
+            if (!res.ok) return alert(data.message || "Failed");
 
-            alert(data.message || "Notice added successfully")
-            onSubmit?.(data.notice)
-            setForm(initialForm)
-            onClose?.()
-        } catch (error) {
-            console.error(error)
-            alert("Server error")
+            alert(data.message || "Success");
+            onSubmit?.();
+            onClose();
+
+        } catch (err) {
+            console.error(err);
+            alert("Server error");
         }
-    }
+    };
 
     return (
         <Modal show={show} onHide={onClose} centered>
-            <Modal.Header closeButton>
-                <Modal.Title>Add Notice</Modal.Title>
-            </Modal.Header>
-
             <Form onSubmit={handleSubmit}>
+                <Modal.Header closeButton>
+                    <Modal.Title>{mode === "edit" ? "Edit Notice" : "Add Notice"}</Modal.Title>
+                </Modal.Header>
+
                 <Modal.Body>
 
                     <Form.Group className="mb-3">
                         <Form.Label>Title</Form.Label>
-                        <Form.Control
-                            name="title"
-                            value={form.title}
-                            onChange={handleChange}
-                            required
-                        />
+                        <Form.Control name="title" value={form.title} onChange={handleChange} required />
                     </Form.Group>
 
                     <Form.Group className="mb-3">
                         <Form.Label>Category</Form.Label>
-                        <Form.Select
-                            name="category"
-                            value={form.category}
-                            onChange={handleChange}
-                        >
-                            {Object.keys(categoryVariant).map(item => (
-                                <option key={item} value={item}>{item}</option>
+                        <Form.Select name="category" value={form.category} onChange={handleChange}>
+                            {Object.keys(categoryVariant).map(c => (
+                                <option key={c}>{c}</option>
                             ))}
                         </Form.Select>
                     </Form.Group>
 
                     <Form.Group className="mb-3">
                         <Form.Label>Publish Date</Form.Label>
-                        <Form.Control
-                            type="date"
-                            name="publishedAt"
-                            value={form.publishedAt}
-                            onChange={handleChange}
-                        />
+                        <Form.Control type="date" name="publishedAt" value={form.publishedAt} onChange={handleChange} />
                     </Form.Group>
 
                     <Form.Group className="mb-3">
                         <Form.Label>Status</Form.Label>
-                        <Form.Check
-                            type="radio"
-                            name="status"
-                            value="active"
-                            checked={form.status === "active"}
-                            onChange={handleChange}
-                            label="Active"
-                        />
-                        <Form.Check
-                            type="radio"
-                            name="status"
-                            value="inactive"
-                            checked={form.status === "inactive"}
-                            onChange={handleChange}
-                            label="Inactive"
-                        />
+                        <Form.Check type="radio" label="Active" name="status" value="active"
+                            checked={form.status === "active"} onChange={handleChange} />
+                        <Form.Check type="radio" label="Inactive" name="status" value="inactive"
+                            checked={form.status === "inactive"} onChange={handleChange} />
                     </Form.Group>
 
                     <Form.Group className="mb-3">
                         <Form.Label>Description</Form.Label>
-                        <Form.Control
-                            as="textarea"
-                            name="description"
-                            value={form.description}
-                            onChange={handleChange}
-                            required
-                        />
+                        <Form.Control as="textarea" name="description"
+                            value={form.description} onChange={handleChange} />
                     </Form.Group>
 
-                    <Form.Group className="mt-3">
-                        <Form.Label>Upload Document</Form.Label>
-                        <Form.Control
-                            type="file"
-                            name="document"
+                    <Form.Group>
+                        <Form.Label>Document</Form.Label>
+                        <Form.Control type="file" name="document"
                             accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
-                            onChange={handleChange}
-                        />
-                        {form.documentName && (
-                            <Form.Text className="text-muted">
-                                Selected: {form.documentName}
-                            </Form.Text>
-                        )}
+                            onChange={handleChange} />
                     </Form.Group>
 
                 </Modal.Body>
 
                 <Modal.Footer>
                     <Button variant="secondary" onClick={onClose}>Cancel</Button>
-                    <Button type="submit">Add Notice</Button>
+                    <Button type="submit">
+                        {mode === "edit" ? "Update Notice" : "Add Notice"}
+                    </Button>
                 </Modal.Footer>
             </Form>
         </Modal>
-    )
+    );
 }
