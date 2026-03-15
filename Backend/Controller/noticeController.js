@@ -75,13 +75,16 @@ exports.updateNotice = async (req, res) => {
         };
 
         if (req.file) {
-            updateData.document = req.file.filename;
+            updateData.documentUrl = req.file?.secure_url || req.file?.path || null;
         }
 
         const notice = await Notice.findByIdAndUpdate(
             id,
             updateData,
-            { returnDocument: "after" }
+            {
+                new: true,
+                runValidators: true
+            }
         );
 
         if (!notice) {

@@ -1,5 +1,5 @@
 const User = require("../models/User");
-
+const bcrypt = require("bcryptjs");
 exports. professorDashboard = (req, res) => {
   res.json({
     message: "Welcome Professor",
@@ -80,3 +80,38 @@ exports.deleteProfessor = async (req, res) => {
         res.status(500).json({ message: "Delete failed", error });
     }
 }
+
+exports.updateProfessor = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const updateData = {
+            name: req.body.name,
+            department: req.body.department,
+            birthdate: req.body.birthdate,
+            phone : req.body.phone,
+            status: req.body.status,
+        };
+
+        const professor = await User.findByIdAndUpdate(
+            id,
+            updateData,
+            { returnDocument: "after" }
+        );
+
+        if (!professor) {
+            return res.status(404).json({ message: "Professor not found" });
+        }
+
+        res.json({
+            message: "Professor updated successfully",
+            professor
+        });
+
+    } catch (err) {
+        res.status(500).json({
+            message: "Professor Update failed",
+            err: err.message
+        });
+    }
+};

@@ -2,31 +2,58 @@ import React, { useState, useEffect } from "react";
 import { Modal, Form, Button } from "react-bootstrap";
 import { categoryVariant } from "../constants/categoryVariant";
 
+const toInputDate = (value) => {
+    if (!value) return new Date().toISOString().split("T")[0];
+
+    // Already ISO
+    if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+
+    const date = new Date(value);
+    if (!Number.isNaN(date.getTime())) {
+        return date.toISOString().split("T")[0];
+    }
+
+    // Handle DD-MM-YYYY
+    const parts = value.split("-");
+    if (parts.length === 3) {
+        const [day, month, year] = parts;
+        if (day.length === 2 && month.length === 2 && year.length === 4) {
+            return `${year}-${month}-${day}`;
+        }
+    }
+
+    return new Date().toISOString().split("T")[0];
+};
+
 export default function NoticeAdd({ show, onClose, onSubmit, mode = "add", notice }) {
 
-    const today = new Date().toISOString().split("T")[0];
-
-    const [form, setForm] = useState({
+    const createDefaultForm = () => ({
         title: "",
         category: "General",
-        publishedAt: today,
+        publishedAt: new Date().toISOString().split("T")[0],
         status: "active",
         description: "",
         document: null
     });
 
+    const [form, setForm] = useState(() => createDefaultForm());
+
     useEffect(() => {
+        if (!show) return;
+
         if (mode === "edit" && notice) {
             setForm({
                 title: notice.title || "",
                 category: notice.category || "General",
-                publishedAt: notice.publishedAt || today,
+                publishedAt: toInputDate(notice.publishedAt),
                 status: notice.status?.toLowerCase() || "active",
                 description: notice.description || "",
                 document: null
             });
+        } else {
+            setForm(createDefaultForm());
         }
-    }, [notice, mode, today ]);
+    }, [mode, notice, show]);
 
     const handleChange = (e) => {
         const { name, value, files } = e.target;

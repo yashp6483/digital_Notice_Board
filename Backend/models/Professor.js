@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const userSchema = new mongoose.Schema({
+const professorSchema = new mongoose.Schema({
     name: {
         type: String,
         required: true
@@ -10,23 +10,33 @@ const userSchema = new mongoose.Schema({
         required: true,
         unique: true
     },
+    phone: {
+        type: String,
+        trim: true
+    },
     password: {
         type: String,
         required: true,
+    },
+    department: {
+        type: String,
+        enum: ["Computer Engineering", "Mechenical Engineering", "Civil Engineering", "Electical Engineering", "Electronics and comunication"],
+        default: "Computer Engineering"
     },
     status: {
         type: String,
         enum: ["active", "inactive"],
         default: "active"
     },
-    birthDate: {
+    birthdate: {
         type: Date
     },
     role: {
         type: String,
         enum: ["admin", "professor"],
-        required: true
+        default: "professor",
+        immutable: true
     }
-})
+}, { timestamps: true });
 
-module.exports = mongoose.model("User", userSchema);
+module.exports = mongoose.model("Professor", professorSchema);

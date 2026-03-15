@@ -6,7 +6,7 @@ const { verifyToken, authorize } = require("../middleware/authMiddleware");
 
 const { createNotice, getNotices, deleteNotice, updateNotice } = require("../Controller/noticeController");
 
-router.get("/notices", verifyToken, authorize("admin"), getNotices);
+router.get("/notices", verifyToken, authorize("admin","professor"), getNotices);
 router.post("/notice", verifyToken, authorize("admin"), upload.single("document"), createNotice);
 router.delete("/notice/delete/:id", verifyToken, authorize("admin"), deleteNotice);
 router.put(

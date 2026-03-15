@@ -4,6 +4,7 @@ export default function TopHeader() {
     const hours = new Date().getHours();
     let greeting = "Good Morning";
     const name = localStorage.getItem("name");
+    const role = localStorage.getItem("role");
 
     if (hours >= 12 && hours < 17) greeting = "Good Afternoon";
     else if (hours >= 17) greeting = "Good Evening";
@@ -14,7 +15,7 @@ export default function TopHeader() {
             <div>
                 <h4 className="fw-bold">{greeting}, {name}! 👋</h4>
                 <span className="text-primary">
-                    Admin 
+                    {role}
                 </span>
                  <i className="fa-regular fa-calendar"> </i>Today <i className="fa-solid fa-circle fa-2xs"> </i> {new Date().toDateString()}
             </div>
