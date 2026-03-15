@@ -55,6 +55,7 @@ app.use("/admin", require("./Routes/adminRoutes"));
 
 // professor routes
 app.use("/professor-dashboard", require("./Routes/professorRoutes"));
+app.use("/admin",require("./Routes/professorRoutes"));
 
 // notice routes
 app.use("/admin", require("./Routes/noticeRoutes"));
