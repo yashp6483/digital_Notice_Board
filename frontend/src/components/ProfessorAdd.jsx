@@ -4,12 +4,13 @@ import { Department } from "../constants/categoryVariant";
 
 export default function ProfessorAdd({ show, onClose, onSubmit }) {
 
+    const birth = new Date().toISOString().split("T")[0];
     const [form, setForm] = useState({
-        name: "",
+        name: "Prof. ",
         department: "Computer Engineering",
         email: "",
         phone: "",
-        birthdate: "",
+        birthdate: birth,
         password: "",
         status: "active"
     });
@@ -29,7 +30,7 @@ export default function ProfessorAdd({ show, onClose, onSubmit }) {
         const token = localStorage.getItem("token");
         if (!token) return alert("Please login again");
 
-        const body = JSON.stringify(form);
+        // const body = JSON.stringify(form);
 
         try {
 

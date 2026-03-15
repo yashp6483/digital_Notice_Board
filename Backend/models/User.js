@@ -24,7 +24,7 @@ const userSchema = new mongoose.Schema({
         enum: ["active", "inactive"],
         default: "active"
     },
-    birthDate: {
+    birthdate: {    
         type: Date
     },
     role: {
