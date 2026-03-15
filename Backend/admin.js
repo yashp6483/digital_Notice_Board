@@ -3,7 +3,14 @@ const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const User = require("./models/User");
 
-mongoose.connect(process.env.MONGO_URL)
+const mongoUri = process.env.MONGO_URI || process.env.MONGO_URL;
+
+if (!mongoUri) {
+  console.error("Mongo connection string missing. Set MONGO_URI in .env");
+  process.exit(1);
+}
+
+mongoose.connect(mongoUri)
   .then(() => console.log("Connected to MongoDB"))
   .catch(err => console.error(err));
 

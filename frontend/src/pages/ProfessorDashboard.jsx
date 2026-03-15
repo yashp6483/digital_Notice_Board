@@ -1,18 +1,39 @@
 import React from 'react'
-import { Button } from 'react-bootstrap'
+import Sidebar from '../components/Sidebar'
+import TopHeader from '../components/Topheader'
+import StateCards from '../components/StateCards'
+import RecentNotices from './RecentNotice'
 
 export default function ProfessorDashboard() {
-  const logout = () => {
-    localStorage.clear();
-    window.location.href = "/login";
-  };
   return (
-    <div>
-      <h1>Professor Dashboard</h1>
-      <p>Welcome to the Professor Dashboard! Here you can manage your courses, view student performance, and access teaching resources.</p>
-      <h2>Course Management</h2>
-      <p>Use the course management tools to create and organize your courses, upload materials, and set up assignments.</p>
-      <Button onClick={logout}>logout</Button>
+    <div className="container-fluid">
+      <div className="row min-vh-100">
+        {/* Sidebar — same as Admin */}
+        <Sidebar />
+
+        {/* Main content — same col structure as AdminDashboard */}
+        <div className="col p-4 bg-body-secondary">
+          {/* TopHeader */}
+          <div className="align-items-center">
+            <TopHeader />
+          </div>
+
+          {/* StateCards row — mirrors AdminDashboard StateCards */}
+          <div className="row g-3 mb-4 mt-3">
+            <StateCards title="My Notices"    value="34"  bg="primary" />
+            <StateCards title="Active Notices" value="28"  bg="info"    />
+            <StateCards title="Pending Approval" value="3" bg="warning" />
+            <StateCards title="My Courses"    value="5"   bg="success" />
+          </div>
+
+          {/* Bottom row — Notices only (no course/professor list) */}
+          <div className="row">
+            <div className="col-12 mb-4">
+              <RecentNotices />
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-  )
+  );
 }

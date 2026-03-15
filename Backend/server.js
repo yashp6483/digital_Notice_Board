@@ -60,7 +60,6 @@ app.use("/admin",require("./Routes/professorRoutes"));
 // notice routes
 app.use("/admin", require("./Routes/noticeRoutes"));
 
-
 // port listening
 app.listen(process.env.PORT, () => {
   console.log(`server is running on port ${process.env.PORT}`);

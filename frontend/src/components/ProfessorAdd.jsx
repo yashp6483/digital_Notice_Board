@@ -1,19 +1,20 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Modal, ModalHeader, ModalBody, ModalTitle, Form, Button } from "react-bootstrap";
 import { Department } from "../constants/categoryVariant";
 
-export default function ProfessorAdd({ show, onClose, onSubmit }) {
+export default function ProfessorAdd({ show, onClose, onSubmit, mode = "add", prof }) {
 
-    const birth = new Date().toISOString().split("T")[0];
-    const [form, setForm] = useState({
+    const defaultForm = {
         name: "Prof. ",
         department: "Computer Engineering",
         email: "",
         phone: "",
-        birthdate: birth,
+        birthdate: "",
         password: "",
         status: "active"
-    });
+    };
+
+    const [form, setForm] = useState(defaultForm);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -23,6 +24,25 @@ export default function ProfessorAdd({ show, onClose, onSubmit }) {
             [name]: value
         });
     };
+    useEffect(() => {
+        if (mode === "edit" && prof) {
+            setForm({
+                name: prof.name || "",
+                department: prof.department || "",
+                email: prof.email || "",
+                phone: prof.phone || "",
+                birthdate: prof.birthdate
+                    ? prof.birthdate.split("-").reverse().join("-")
+                    : "",
+                password: "",
+                status: prof.status === "Active" ? "active" : "inactive"
+            });
+        } else {
+            setForm(defaultForm);
+        }
+    }, [mode, prof, show]);
+
+
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -30,19 +50,27 @@ export default function ProfessorAdd({ show, onClose, onSubmit }) {
         const token = localStorage.getItem("token");
         if (!token) return alert("Please login again");
 
-        // const body = JSON.stringify(form);
+        const url = mode === "edit"
+            ? `http://localhost:5000/admin/professor/update/${prof._id}`
+            : "http://localhost:5000/admin/professor";
+
+        const method = mode === "edit" ? "PUT" : "POST";
+
+        const payload = { ...form };
+
+        if (mode === "edit" && !payload.password) {
+            delete payload.password;
+        }
 
         try {
-
-            const res = await fetch("http://localhost:5000/admin/professor", {
-                method: "POST",
+            const res = await fetch(url, {
+                method,
                 headers: {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${token}`
                 },
-                body: JSON.stringify(form)
+                body: JSON.stringify(payload)
             });
-
 
             const data = await res.json();
 
@@ -51,7 +79,10 @@ export default function ProfessorAdd({ show, onClose, onSubmit }) {
                 return;
             }
 
-            alert("Professor Added Successfully");
+            alert(mode === "edit"
+                ? "Professor Updated Successfully"
+                : "Professor Added Successfully"
+            );
 
             onSubmit?.();
             onClose();
@@ -62,13 +93,17 @@ export default function ProfessorAdd({ show, onClose, onSubmit }) {
         }
     };
 
+
     return (
         <Modal show={show} onHide={onClose} centered>
 
             <Form onSubmit={handleSubmit}>
 
                 <ModalHeader closeButton>
-                    <ModalTitle>Add Professor</ModalTitle>
+                    <ModalTitle>
+                        {mode === "edit" ? "Edit Professor" : "Add Professor"}
+                    </ModalTitle>
+
                 </ModalHeader>
 
                 <ModalBody>
@@ -82,6 +117,7 @@ export default function ProfessorAdd({ show, onClose, onSubmit }) {
                             required
                         />
                     </Form.Group>
+
                     <Form.Group className="mb-3">
                         <Form.Label>Email</Form.Label>
                         <Form.Control
@@ -90,16 +126,19 @@ export default function ProfessorAdd({ show, onClose, onSubmit }) {
                             onChange={handleChange}
                         />
                     </Form.Group>
-                    <Form.Group className="mb-3">
-                        <Form.Label>Password</Form.Label>
-                        <Form.Control
-                            type="password"
-                            name="password"
-                            value={form.password}
-                            onChange={handleChange}
-                            required
-                        />
-                    </Form.Group>
+
+                    {mode === "add" && (
+                        <Form.Group className="mb-3">
+                            <Form.Label>Password</Form.Label>
+                            <Form.Control
+                                type="password"
+                                name="password"
+                                value={form.password}
+                                onChange={handleChange}
+                                required
+                            />
+                        </Form.Group>
+                    )}
 
                     <Form.Group className="mb-3">
                         <Form.Label>Department</Form.Label>
@@ -155,10 +194,10 @@ export default function ProfessorAdd({ show, onClose, onSubmit }) {
                         />
 
                     </Form.Group>
-
                     <Button type="submit" variant="primary">
-                        Add Professor
+                        {mode === "edit" ? "Update Professor" : "Add Professor"}
                     </Button>
+
 
                 </ModalBody>
 
