@@ -1,9 +1,56 @@
-import React from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import Sidebar from '../components/Sidebar';
 import StateCards from '../components/StateCards';
 import NoticeTable from '../components/NoticeTable';
+import { fetchNotice } from '../servieces/noticeServices';
+import { fetchProfessor } from '../servieces/professorServices';
+import Swal from "sweetalert2";
+import {
+    calculateNoticeStats,
+    getInitialNoticeStats,
+    calculateProfessorStats,
+    getInitialProfessorStats
+} from '../utils/statHelpers';
 
 export default function AdminNotice() {
+    const navigate = useNavigate();
+    const [noticeStats, setNoticeStats] = useState(getInitialNoticeStats);
+    const [professorStats, setProfessorStats] = useState(getInitialProfessorStats);
+
+    const loadPageStats = useCallback(async () => {
+        try {
+            const [noticesFromApi, professorsFromApi] = await Promise.all([
+                fetchNotice(),
+                fetchProfessor()
+            ]);
+
+            const normalizedNotices = noticesFromApi || [];
+            const normalizedProfessors = professorsFromApi || [];
+
+            setNoticeStats(calculateNoticeStats(normalizedNotices));
+            setProfessorStats(calculateProfessorStats(normalizedProfessors));
+        } catch (error) {
+            console.error(error);
+            if (error.status === 401 || error.status === 403) {
+                localStorage.removeItem("token");
+                localStorage.removeItem("role");
+                localStorage.removeItem("name");
+                navigate("/unauthorized");
+                return;
+            }
+            Swal.fire({
+                icon: "error",
+                title: "Failed to load notice stats",
+                text: error.message || "Something went wrong"
+            });
+        }
+    }, [navigate]);
+
+    useEffect(() => {
+        loadPageStats();
+    }, [loadPageStats]);
+
     return (
         <div className='container-fluid'>
             <div className='row min-vh-100'>
@@ -14,18 +61,18 @@ export default function AdminNotice() {
                             <div>
                                 <h4>Notice Management</h4>
                             </div>
-                            <button className="btn btn-light">⚙ Settings</button>
+                            <button className="btn btn-light">Settings</button>
                         </div>
                     </div>
                     <div className="row g-3 mb-4">
-                        <StateCards title="Total Notices" value="120" bg="primary" />
-                        <StateCards title="Active Notices" value="98" bg="info" />
-                        <StateCards title="Inactive Notices" value="22" bg="warning" />
-                        <StateCards title="Pending Approval" value="5" bg="success" />
+                        <StateCards title="Total Notices" value={noticeStats.total} bg="primary" />
+                        <StateCards title="Active Notices" value={noticeStats.active} bg="info" />
+                        <StateCards title="Inactive Notices" value={noticeStats.inactive} bg="warning" />
+                        <StateCards title="Total Professors" value={professorStats.total} bg="success" />
                     </div>
                     <div className='row'>
                         <div className='mb-4'>
-                            <NoticeTable     />
+                            <NoticeTable />
                         </div>
                     </div>
                 </div>

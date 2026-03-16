@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from 'react'
 import DocumentViewerModal from "./DocumentViewerModal";
 import { deleteNotice, fetchNotice, mapNoticeForTable } from '../servieces/noticeServices'
 import { useNavigate } from 'react-router-dom'
+import Swal from "sweetalert2";
 
 export default function NoticeTable() {
   const navigate = useNavigate();
@@ -39,7 +40,11 @@ export default function NoticeTable() {
         navigate("/unauthorized");
         return;
       }
-      alert(error.message);
+      Swal.fire({
+        icon: "error",
+        title: "Failed to load notices",
+        text: error.message || "Something went wrong"
+      });
     } finally {
       setLoading(false);
     }
@@ -48,8 +53,18 @@ export default function NoticeTable() {
 
   // notice delete code 
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this notice?"))
-      return;
+    const result = await Swal.fire({
+      title: "Delete this notice?",
+      text: "This action cannot be undone.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, delete",
+      cancelButtonText: "Cancel"
+    });
+
+    if (!result.isConfirmed) return;
 
     try {
       await deleteNotice(id);
@@ -57,6 +72,12 @@ export default function NoticeTable() {
         prevNotices.filter((notice) => notice._id !== id)
       ); // ✅ auto refresh
       await fetchNotice();
+      Swal.fire({
+        icon: "success",
+        title: "Notice deleted",
+        timer: 1200,
+        showConfirmButton: false
+      });
     } catch (error) {
       if (error.status === 401 || error.status === 403) {
         localStorage.removeItem("token");
@@ -65,7 +86,11 @@ export default function NoticeTable() {
         navigate("/unauthorized");
         return;
       }
-      alert(error.message);
+      Swal.fire({
+        icon: "error",
+        title: "Delete failed",
+        text: error.message || "Unable to delete notice"
+      });
     }
   };
 
