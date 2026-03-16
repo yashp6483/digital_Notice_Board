@@ -3,6 +3,7 @@ import { Card, Table, Badge, Button } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import { categoryVariant } from "../constants/categoryVariant";
 import { fetchNotice, mapNoticeForTable } from "../servieces/noticeServices";
+import Swal from "sweetalert2";
 
 export default function RecentNotices() {
 
@@ -27,7 +28,11 @@ export default function RecentNotices() {
       }
     } catch (error) {
       console.error(error);
-      alert(error.message);
+      Swal.fire({
+        icon: "error",
+        title: "Failed to load notices",
+        text: error.message || "Something went wrong"
+      });
     } finally {
       setLoading(false);
     }

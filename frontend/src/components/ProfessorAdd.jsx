@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Modal, ModalHeader, ModalBody, ModalTitle, Form, Button } from "react-bootstrap";
 import { Department } from "../constants/categoryVariant";
+import Swal from "sweetalert2";
 
 export default function ProfessorAdd({ show, onClose, onSubmit, mode = "add", prof }) {
 
@@ -48,7 +49,14 @@ export default function ProfessorAdd({ show, onClose, onSubmit, mode = "add", pr
         e.preventDefault();
 
         const token = localStorage.getItem("token");
-        if (!token) return alert("Please login again");
+        if (!token) {
+            Swal.fire({
+                icon: "warning",
+                title: "Session expired",
+                text: "Please login again."
+            });
+            return;
+        }
 
         const url = mode === "edit"
             ? `http://localhost:5000/admin/professor/update/${prof._id}`
@@ -75,21 +83,33 @@ export default function ProfessorAdd({ show, onClose, onSubmit, mode = "add", pr
             const data = await res.json();
 
             if (!res.ok) {
-                alert(data.message);
+                Swal.fire({
+                    icon: "error",
+                    title: "Action failed",
+                    text: data.message || "Unable to save professor"
+                });
                 return;
             }
 
-            alert(mode === "edit"
-                ? "Professor Updated Successfully"
-                : "Professor Added Successfully"
-            );
+            Swal.fire({
+                icon: "success",
+                title: mode === "edit"
+                    ? "Professor updated successfully"
+                    : "Professor added successfully",
+                timer: 1500,
+                showConfirmButton: false
+            });
 
             onSubmit?.();
             onClose();
 
         } catch (err) {
             console.log(err);
-            alert("Server Error");
+            Swal.fire({
+                icon: "error",
+                title: "Server error",
+                text: "Unable to save professor right now."
+            });
         }
     };
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Modal, Form, Button } from "react-bootstrap";
 import { categoryVariant } from "../constants/categoryVariant";
+import Swal from "sweetalert2";
 
 const toInputDate = (value) => {
     if (!value) return new Date().toISOString().split("T")[0];
@@ -67,7 +68,14 @@ export default function NoticeAdd({ show, onClose, onSubmit, mode = "add", notic
         e.preventDefault();
 
         const token = localStorage.getItem("token");
-        if (!token) return alert("Please login again");
+        if (!token) {
+            Swal.fire({
+                icon: "warning",
+                title: "Session expired",
+                text: "Please login again."
+            });
+            return;
+        }
 
         const formData = new FormData();
         Object.keys(form).forEach(key => {
@@ -89,15 +97,31 @@ export default function NoticeAdd({ show, onClose, onSubmit, mode = "add", notic
 
             const data = await res.json();
 
-            if (!res.ok) return alert(data.message || "Failed");
+            if (!res.ok) {
+                Swal.fire({
+                    icon: "error",
+                    title: mode === "edit" ? "Update failed" : "Creation failed",
+                    text: data.message || "Unable to save notice"
+                });
+                return;
+            }
 
-            alert(data.message || "Success");
+            Swal.fire({
+                icon: "success",
+                title: data.message || (mode === "edit" ? "Notice updated" : "Notice created"),
+                timer: 1500,
+                showConfirmButton: false
+            });
             onSubmit?.();
             onClose();
 
         } catch (err) {
             console.error(err);
-            alert("Server error");
+            Swal.fire({
+                icon: "error",
+                title: "Server error",
+                text: "Unable to save notice right now."
+            });
         }
     };
 

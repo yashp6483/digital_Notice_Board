@@ -3,6 +3,7 @@ import { Card, Table, Badge, Button } from "react-bootstrap";
 import { Link, useNavigate } from "react-router-dom";
 import ProfessorAdd from "../components/ProfessorAdd";
 import { deleteProfessor, fetchProfessor, mapProfessorForTable } from "../servieces/professorServices";
+import Swal from "sweetalert2";
 
 export default function ProfessorList({ showDetails = false }) {
   const navigate = useNavigate();
@@ -26,15 +27,29 @@ export default function ProfessorList({ showDetails = false }) {
         navigate("/unauthorized");
         return;
       }
-      alert(error.message);
+      Swal.fire({
+        icon: "error",
+        title: "Failed to load professors",
+        text: error.message || "Something went wrong"
+      });
     } finally {
       setLoading(false);
     }
   }, [navigate]);
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete the professor?"))
-      return;
+    const result = await Swal.fire({
+      title: "Delete this professor?",
+      text: "This action cannot be undone.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, delete",
+      cancelButtonText: "Cancel"
+    });
+
+    if (!result.isConfirmed) return;
 
     try {
       await deleteProfessor(id);
@@ -42,6 +57,12 @@ export default function ProfessorList({ showDetails = false }) {
         prevProfessor.filter((professor) => professor._id !== id)
       ); // ✅ auto refresh
       await fetchProfessors();
+      Swal.fire({
+        icon: "success",
+        title: "Professor deleted",
+        timer: 1200,
+        showConfirmButton: false
+      });
     } catch (error) {
       if (error.status === 401 || error.status === 403) {
         localStorage.removeItem("token");
@@ -50,7 +71,11 @@ export default function ProfessorList({ showDetails = false }) {
         navigate("/unauthorized");
         return;
       }
-      alert(error.message);
+      Swal.fire({
+        icon: "error",
+        title: "Delete failed",
+        text: error.message || "Unable to delete professor"
+      });
     }
   };
 
@@ -76,12 +101,11 @@ export default function ProfessorList({ showDetails = false }) {
             <tr>
               <th>Name</th>
               <th>Department</th>
-
-              {showDetails && <th>Email</th>}
+              <th>Email</th>
               {showDetails && <th>Birth Date</th>}
 
               <th>Status</th>
-              <th>Actions</th>
+              {showDetails && <th>Actions</th>}
             </tr>
           </thead>
 
@@ -96,7 +120,7 @@ export default function ProfessorList({ showDetails = false }) {
                 <td>{prof.name}</td>
                 <td>{prof.department}</td>
 
-                {showDetails && <td>{prof.email}</td>}
+                <td>{prof.email}</td>
                 {showDetails && <td>{prof.birthdate}</td>}
 
                 <td>
@@ -105,7 +129,7 @@ export default function ProfessorList({ showDetails = false }) {
                   </Badge>
                 </td>
 
-                <td>
+                {showDetails && <td>
                   <Button
                     size="sm"
                     variant="outline-primary"
@@ -126,7 +150,7 @@ export default function ProfessorList({ showDetails = false }) {
                     🗑️
                   </Button>
 
-                </td>
+                </td>}
 
               </tr>
             ))}

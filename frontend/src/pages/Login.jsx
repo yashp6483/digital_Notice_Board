@@ -54,13 +54,21 @@ function Login() {
       } else if (data.role === "professor") {
         navigate("/professor-dashboard")
       } else {
-        alert("Unauthorized role");
+        Swal.fire({
+          icon: "error",
+          title: "Unauthorized role",
+          text: "Your account does not have dashboard access."
+        });
         localStorage.clear();
         navigate("/login");
       }
     } catch (err) {
       console.log(err);
-      alert("Server error");
+      Swal.fire({
+        icon: "error",
+        title: "Server error",
+        text: "Unable to login right now."
+      });
     }
   };
 
