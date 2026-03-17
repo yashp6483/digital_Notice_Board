@@ -6,13 +6,13 @@ const { verifyToken, authorize } = require("../middleware/authMiddleware");
 
 const { createNotice, getNotices, deleteNotice, updateNotice } = require("../Controller/noticeController");
 
-router.get("/notices", verifyToken, authorize("admin","professor"), getNotices);
-router.post("/notice", verifyToken, authorize("admin"), upload.single("document"), createNotice);
-router.delete("/notice/delete/:id", verifyToken, authorize("admin"), deleteNotice);
+router.get("/notices", verifyToken, authorize("admin", "professor"), getNotices);
+router.post("/notice", verifyToken, authorize("admin", "professor"), upload.single("document"), createNotice);
+router.delete("/notice/delete/:id", verifyToken, authorize("admin", "professor"), deleteNotice);
 router.put(
     "/notice/update/:id",
     verifyToken,
-    authorize("admin"),
+    authorize("admin", "professor"),
     upload.single("document"),
     updateNotice
 );

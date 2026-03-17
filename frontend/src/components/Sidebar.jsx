@@ -37,7 +37,8 @@ export default function Sidebar() {
   const toggleSidebar = () => {
     setIsCollapsed((prev) => !prev);
   };
-
+  const role = localStorage.getItem("role");
+  const basePath = role === "admin" ? "/admin" : "/professor";
   return (
     <div
       className="d-flex flex-column min-vh-100 bg-primary text-white p-2 p-md-3 flex-shrink-0"
@@ -65,7 +66,8 @@ export default function Sidebar() {
         <li className="nav-item">
           <Link
             className={`nav-link text-white d-flex align-items-center px-2 px-md-3 ${isCollapsed ? "justify-content-center" : "justify-content-start"}`}
-            to="/admin-dashboard"
+            to={`${basePath}`}
+
           >
             <i className={`fa-solid fa-house ${isCollapsed ? "" : "me-2"}`}></i>
             {!isCollapsed && <span>Dashboard</span>}
@@ -75,32 +77,37 @@ export default function Sidebar() {
         <li className="nav-item">
           <Link
             className={`nav-link text-white d-flex align-items-center px-2 px-md-3 ${isCollapsed ? "justify-content-center" : "justify-content-start"}`}
-            to="/admin/notices"
+            to={`${basePath}/notices`}
+
           >
             <i className={`fa-solid fa-bullhorn ${isCollapsed ? "" : "me-2"}`} ></i>
             {!isCollapsed && <span>Notices</span>}
           </Link>
         </li>
-
         <li className="nav-item">
           <Link
-            className={`nav-link text-white d-flex align-items-center px-2 px-md-3 ${isCollapsed ? "justify-content-center" : "justify-content-start"}`}
-            to="/admin/professors"
+            className={`nav-link text-white d-flex align-items-center px-2 px-md-3 ${isCollapsed ? "justify-content-center" : "justify-content-start"
+              }`}
+            to={`${basePath}/my-notices`}
           >
-            <i className={`fa-solid fa-user-tie ${isCollapsed ? "" : "me-2"}`}></i>
-            {!isCollapsed && <span>Professors</span>}
+            <i className={`fa-solid fa-user ${isCollapsed ? "" : "me-2"}`}></i>
+            {!isCollapsed && <span>My Notices</span>}
           </Link>
         </li>
 
-        <li className="nav-item">
-          <Link
-            className={`nav-link text-white d-flex align-items-center px-2 px-md-3 ${isCollapsed ? "justify-content-center" : "justify-content-start"}`}
-            to="/admin/categories"
-          >
-            <i className={`fa-solid fa-layer-group ${isCollapsed ? "" : "me-2"}`}></i>
-            {!isCollapsed && <span>Categories</span>}
-          </Link>
-        </li>
+        {role === "admin" && (
+          <li className="nav-item">
+            <Link
+              className={`nav-link text-white d-flex align-items-center px-2 px-md-3 ${isCollapsed ? "justify-content-center" : "justify-content-start"
+                }`}
+              to="/admin/professors"
+            >
+              <i className={`fa-solid fa-user-tie ${isCollapsed ? "" : "me-2"}`}></i>
+              {!isCollapsed && <span>Professors</span>}
+            </Link>
+          </li>
+        )}
+
 
         <li className="nav-item">
           <Link
@@ -109,16 +116,6 @@ export default function Sidebar() {
           >
             <i className={`fa-solid fa-display ${isCollapsed ? "" : "me-2"}`}></i>
             {!isCollapsed && <span>Display Controls</span>}
-          </Link>
-        </li>
-
-        <li className="nav-item">
-          <Link
-            className={`nav-link text-white d-flex align-items-center px-2 px-md-3 ${isCollapsed ? "justify-content-center" : "justify-content-start"}`}
-            to="/admin/reports"
-          >
-            <i className={`fa-solid fa-file-lines ${isCollapsed ? "" : "me-2"}`}></i>
-            {!isCollapsed && <span>Reports</span>}
           </Link>
         </li>
 

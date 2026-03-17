@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Card, Button } from "react-bootstrap";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import loginImg from "../online-learning-class-illustration.png";
 import Swal from "sweetalert2";
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -50,9 +50,9 @@ function Login() {
       });
 
       if (data.role === "admin") {
-        navigate("/admin-dashboard")
+        navigate("/admin")
       } else if (data.role === "professor") {
-        navigate("/professor-dashboard")
+        navigate("/professor")
       } else {
         Swal.fire({
           icon: "error",
@@ -165,9 +165,9 @@ function Login() {
                       Remember me
                     </label>
                   </div>
-                  <a href=" " className="text-decoration-none">
+                  <Link to="/forgot-password" className="text-decoration-none">
                     Forgot password?
-                  </a>
+                  </Link>
                 </div>
 
                 {/* BUTTON */}

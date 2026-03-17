@@ -1,12 +1,13 @@
 export const fetchNotice = async () => {
     const token = localStorage.getItem("token")
+    const role = localStorage.getItem("role");
     if (!token) {
         const error = new Error("Unauthorized");
         error.status = 401;
         throw error;
     }
 
-    const res = await fetch("http://localhost:5000/admin/notices", {
+    const res = await fetch(`http://localhost:5000/${role}/notices`, {
         headers: {
             Authorization: `Bearer ${token}`
         }

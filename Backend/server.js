@@ -54,11 +54,14 @@ app.post("/login", async (req, res) => {
 app.use("/admin", require("./Routes/adminRoutes"));
 
 // professor routes
-app.use("/professor-dashboard", require("./Routes/professorRoutes"));
 app.use("/admin",require("./Routes/professorRoutes"));
 
 // notice routes
 app.use("/admin", require("./Routes/noticeRoutes"));
+app.use("/professor",require("./Routes/noticeRoutes"));
+
+//forgot route 
+app.use("/",require("./Routes/auth"));
 
 // port listening
 app.listen(process.env.PORT, () => {

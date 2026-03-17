@@ -8,7 +8,7 @@ export const fetchProfessor = async () => {
         throw error;
     }
 
-    const res = await fetch("http://localhost:5000/admin/professors", {
+    const res = await fetch(`http://localhost:5000/admin/professors`, {
         headers: {
             Authorization: `Bearer ${token}`
         }
@@ -16,7 +16,7 @@ export const fetchProfessor = async () => {
 
     const data = await res.json()
     if (!res.ok) {
-        const error = new Error(data.message || data.err || "Failed to fetch notices");
+        const error = new Error(data.message || data.err || "Failed to fetch professor");
         error.status = res.status;
         throw error;
     }
