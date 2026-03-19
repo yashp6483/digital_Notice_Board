@@ -90,7 +90,7 @@ export default function Sidebar() {
               }`}
             to={`${basePath}/my-notices`}
           >
-            <i className={`fa-solid fa-user ${isCollapsed ? "" : "me-2"}`}></i>
+            <i className={`fa-solid fa-bell ${isCollapsed ? "" : "me-2"}`}></i>
             {!isCollapsed && <span>My Notices</span>}
           </Link>
         </li>

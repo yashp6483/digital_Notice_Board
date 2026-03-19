@@ -103,3 +103,20 @@ exports.updateNotice = async (req, res) => {
         });
     }
 };
+
+exports.getMyNotices = async (req, res) => {
+    try {
+        const userId = req.user.id || req.user._id;
+
+        const notices = await Notice.find({
+            createdBy: userId,
+            isDeleted: false
+        }).populate("createdBy", "name email");;
+
+        res.json(notices);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+

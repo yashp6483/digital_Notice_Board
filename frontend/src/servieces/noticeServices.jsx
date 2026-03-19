@@ -114,3 +114,19 @@ export const updateNotice = async (id, formData) => {
 
     return data;
 };
+
+// services/noticeServices.js
+export const fetchMyNotice = async () => {
+    const role = localStorage.getItem("role");
+    const res = await fetch(`http://localhost:5000/${role}/my-notices`, {
+        headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`
+        }
+    });
+
+    if (!res.ok) {
+        throw new Error("Failed to fetch notices");
+    }
+
+    return res.json();
+};
