@@ -11,6 +11,7 @@ import AdminProfessor from './pages/AdminProfessor';
 import ProfessorNotice from './pages/ProfessorNotice';
 import ForgotPassword from './pages/ForgotPassword';
 import MyNotice from "./pages/MyNotice";
+import NoticeDisplay from './components/NoticeDisplay';
 function App() {
   return (
     <Routes>
@@ -18,6 +19,7 @@ function App() {
       <Route path="/" element={<Login />} />
       {/* login route  */}
       <Route path='/login' element={<Login />} />
+      <Route path='/display' element={<NoticeDisplay />}/>
       <Route path='/unauthorized' element={<Unauthorized />} />
       <Route path='/document-view' element={<DocumentView/>}/>
       <Route path="/forgot-password" element={<ForgotPassword />} />

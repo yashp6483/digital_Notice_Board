@@ -130,3 +130,17 @@ export const fetchMyNotice = async () => {
 
     return res.json();
 };
+
+export const fetchPublicNotices = async () => {
+    const res = await fetch(`http://localhost:5000/admin/notice`);
+
+    const data = await res.json();
+
+    if (!res.ok) {
+        const error = new Error(data.message || "Failed to fetch notices");
+        error.status = res.status;
+        throw error;
+    }
+
+    return data.notices || [];
+};

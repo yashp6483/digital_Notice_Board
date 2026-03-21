@@ -18,11 +18,30 @@ exports.createNotice = async (req, res) => {
             .populate("createdBy", "name")
             .lean();
 
+        // 🔍 DETECT TYPE
+        let type = "text";
+
+        if (populatedNotice.documentUrl) {
+            if (
+                populatedNotice.documentUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i)
+            ) {
+                type = "image";
+            } else {
+                type = "url";
+            }
+        }
+
+        populatedNotice.type = type;
+
+        // 🔥 ✅ CORRECT SOCKET EMIT
+        req.io.emit("new_notice", populatedNotice);
+
         res.status(201).json({
             success: true,
             message: "Notice created successfully",
             notice: populatedNotice
         });
+
     } catch (err) {
         res.status(500).json({ err: err.message });
     }
@@ -54,13 +73,20 @@ exports.deleteNotice = async (req, res) => {
             return res.status(404).json({ message: "NO NOTICE FOUND" });
         }
 
+        // 🔥 SOCKET EMIT (IMPORTANT)
+        req.io.emit("delete_notice", id);
+
         res.status(200).json({
             message: "Notice deleted successfully",
-        })
+        });
+
     } catch (error) {
-        res.status(500).json({ message: "Delete failed", error });
+        res.status(500).json({
+            message: "Delete failed",
+            error
+        });
     }
-}
+};
 
 exports.updateNotice = async (req, res) => {
     try {
@@ -75,7 +101,8 @@ exports.updateNotice = async (req, res) => {
         };
 
         if (req.file) {
-            updateData.documentUrl = req.file?.secure_url || req.file?.path || null;
+            updateData.documentUrl =
+                req.file?.secure_url || req.file?.path || null;
         }
 
         const notice = await Notice.findByIdAndUpdate(
@@ -85,11 +112,14 @@ exports.updateNotice = async (req, res) => {
                 new: true,
                 runValidators: true
             }
-        );
+        ).populate("createdBy", "name"); // 🔥 IMPORTANT
 
         if (!notice) {
             return res.status(404).json({ message: "Notice not found" });
         }
+
+        // 🔥 SOCKET EMIT (VERY IMPORTANT)
+        req.io.emit("update_notice", notice);
 
         res.json({
             message: "Notice updated successfully",
@@ -116,6 +146,41 @@ exports.getMyNotices = async (req, res) => {
         res.json(notices);
     } catch (error) {
         res.status(500).json({ message: error.message });
+    }
+};
+
+exports.getPublicNotice = async (req, res) => {
+    try {
+        const notices = await Notice.find({
+            status: "active",
+            isDeleted: false
+        })
+            .sort({ createdAt: -1 })
+            .populate("createdBy", "name")
+            .lean();
+
+        // 🔥 ADD TYPE LOGIC HERE
+        const formattedNotices = notices.map((notice) => {
+            let type = "text";
+
+            if (notice.documentUrl) {
+                if (notice.documentUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
+                    type = "image";
+                } else if (notice.documentUrl.includes("http")) {
+                    type = "url";
+                }
+            }
+
+            return {
+                ...notice,
+                type
+            };
+        });
+
+        res.json({ notices: formattedNotices });
+
+    } catch (err) {
+        res.status(500).json({ message: "Failed to fetch notices" });
     }
 };
 

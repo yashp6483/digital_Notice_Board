@@ -4,8 +4,14 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const User = require('./models/User');
 const connectDb = require('./config/db');
+const mongoose = require("mongoose");
+const http = require("http");
+
 const app = express();
+const server = http.createServer(app);
 require('dotenv').config();
+
+const { Server } = require("socket.io");
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -17,6 +23,27 @@ const SECRET_KEY = process.env.JWT_SECRET;
 app.use(cors());
 app.use(express.json());
 
+// socket io connection
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+  },
+});
+
+// 🔥 MAKE IO AVAILABLE IN CONTROLLERS
+app.use((req, res, next) => {
+  req.io = io;
+  next();
+});
+
+// 🔥 SOCKET CONNECTION
+io.on("connection", (socket) => {
+  console.log("Client connected:", socket.id);
+
+  socket.on("disconnect", () => {
+    console.log("Client disconnected:", socket.id);
+  });
+});
 app.post("/login", async (req, res) => {
   const { email, password } = req.body;
   const role = (req.body.role || "").toString().trim().toLowerCase();
@@ -54,17 +81,18 @@ app.post("/login", async (req, res) => {
 app.use("/admin", require("./Routes/adminRoutes"));
 
 // professor routes
-app.use("/admin",require("./Routes/professorRoutes"));
+app.use("/admin", require("./Routes/professorRoutes"));
 
 // notice routes
 app.use("/admin", require("./Routes/noticeRoutes"));
-app.use("/professor",require("./Routes/noticeRoutes"));
+app.use("/professor", require("./Routes/noticeRoutes"));
+app.use("/", require("./Routes/noticeRoutes"));
 
 //forgot route 
-app.use("/",require("./Routes/auth"));
+app.use("/", require("./Routes/auth"));
 
 // port listening
-app.listen(process.env.PORT, () => {
-  console.log(`server is running on port ${process.env.PORT}`);
-})
+server.listen(process.env.PORT, () => {
+  console.log(`Server running on port ${process.env.PORT}`);
+});
 
