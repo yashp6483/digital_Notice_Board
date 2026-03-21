@@ -65,8 +65,8 @@ export default function AdminDashboard() {
             <StateCards title="Total Notices" value={noticeStats.total} bg="primary" />
             <StateCards title="Active Notices" value={noticeStats.active} bg="info" />
             <StateCards title="Inactive Notices" value={noticeStats.inactive} bg="warning" />
-            <StateCards title="Pending Approval" value={noticeStats.pending} bg="success" />
             <StateCards title="Total Professors" value={professorStats.total} bg="secondary" />
+            <StateCards title="Active Professors" value={professorStats.active} bg="success" />
             <StateCards title="Inactive Professors" value={professorStats.inactive} bg="danger" />
           </div>
           <div className='row'>

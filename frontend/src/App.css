@@ -36,3 +36,18 @@
     transform: rotate(360deg);
   }
 }
+
+/* Desktop Sidebar Space */
+@media (min-width: 768px) {
+  .main-content {
+    margin-left: 250px; /* match sidebar width */
+    transition: margin-left 0.3s ease;
+  }
+}
+
+/* When sidebar collapsed */
+@media (min-width: 768px) {
+  .sidebar-collapsed .main-content {
+    margin-left: 80px;
+  }
+}

@@ -10,17 +10,25 @@ export default function TopHeader() {
     else if (hours >= 17) greeting = "Good Evening";
 
     return (
-        
+
         <div className="rounded d-flex justify-content-between align-items-center">
             <div>
                 <h4 className="fw-bold">{greeting}, {name}! 👋</h4>
                 <span className="text-primary">
                     {role}
                 </span>
-                 <i className="fa-regular fa-calendar"> </i>Today <i className="fa-solid fa-circle fa-2xs"> </i> {new Date().toDateString()}
+                <i className="fa-regular fa-calendar"> </i>Today <i className="fa-solid fa-circle fa-2xs"> </i> {new Date().toDateString()}
             </div>
-
-            <button className="btn btn-light">⚙ Settings</button>
+            {/* <div className='d-flex align-items-center gap-2'>
+                <i className="fa-solid fa-circle-user fs-3"></i>
+                <button className="btn btn-light">⚙ Settings</button>
+            </div> */}
+            <div className={`d-flex align-items-center gap-2 `}>
+                <i className="fa-solid fa-circle-user fs-3 text-primary"></i>
+                <div>
+                    <button className="btn btn-light">⚙ Settings</button>
+                </div>
+            </div>
         </div>
     );
 }

@@ -12,7 +12,7 @@ import {
 
 export default function ProfessorNotice() {
     const navigate = useNavigate();
-    const [noticeStats, setNoticeStats] = useState(getInitialNoticeStats);
+    const [noticeStats, setNoticeStats] = useState(getInitialNoticeStats());
 
     const loadPageStats = useCallback(async () => {
         try {
