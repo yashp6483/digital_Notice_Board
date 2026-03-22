@@ -14,6 +14,8 @@ export default function ProfessorNotice() {
     const navigate = useNavigate();
     const [noticeStats, setNoticeStats] = useState(getInitialNoticeStats());
 
+    const name = localStorage.getItem("name");
+
     const loadPageStats = useCallback(async () => {
         try {
             const [noticesFromApi] = await Promise.all([
@@ -54,7 +56,20 @@ export default function ProfessorNotice() {
                             <div>
                                 <h4>Notice Management</h4>
                             </div>
-                            <button className="btn btn-light">Settings</button>
+                            <div
+                                className="d-flex justify-content-center align-items-center rounded-circle bg-primary text-white"
+                                style={{
+                                    width: "42px",
+                                    height: "42px",
+                                    cursor: "pointer",
+                                }}
+                            >
+                                <span className="fw-bold">
+                                    {name
+                                        ? name.charAt(0).toUpperCase()
+                                        : "U"}
+                                </span>
+                            </div>
                         </div>
                     </div>
                     <div className="row g-3 mb-4">

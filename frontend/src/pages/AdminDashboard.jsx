@@ -74,7 +74,7 @@ export default function AdminDashboard() {
               <RecentNotices />
             </div>
             <div className='col-12 col-lg-6 mb-4'>
-              <ProfessorList showDetails={false} />
+              <ProfessorList showDetails={false} maxEntries={5} />
             </div>
           </div>
         </div>
