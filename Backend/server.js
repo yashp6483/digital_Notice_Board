@@ -44,6 +44,8 @@ io.on("connection", (socket) => {
     console.log("Client disconnected:", socket.id);
   });
 });
+
+//Login route 
 app.post("/login", async (req, res) => {
   const { email, password } = req.body;
   const role = (req.body.role || "").toString().trim().toLowerCase();
@@ -71,7 +73,7 @@ app.post("/login", async (req, res) => {
   const token = jwt.sign(
     { userId: user._id, role: user.role },
     SECRET_KEY,
-    { expiresIn: "1h" }
+    { expiresIn: "7d" }
   );
 
   res.json({ token, name: user.name, role: user.role });
@@ -95,4 +97,3 @@ app.use("/", require("./Routes/auth"));
 server.listen(process.env.PORT, () => {
   console.log(`Server running on port ${process.env.PORT}`);
 });
-
