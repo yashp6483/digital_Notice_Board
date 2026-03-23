@@ -41,7 +41,6 @@ exports.createNotice = async (req, res) => {
             message: "Notice created successfully",
             notice: populatedNotice
         });
-
     } catch (err) {
         res.status(500).json({ err: err.message });
     }
@@ -79,7 +78,6 @@ exports.deleteNotice = async (req, res) => {
         res.status(200).json({
             message: "Notice deleted successfully",
         });
-
     } catch (error) {
         res.status(500).json({
             message: "Delete failed",
@@ -183,5 +181,3 @@ exports.getPublicNotice = async (req, res) => {
         res.status(500).json({ message: "Failed to fetch notices" });
     }
 };
-
-

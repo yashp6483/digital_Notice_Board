@@ -1,9 +1,21 @@
 import React, { useState } from "react";
 import Swal from "sweetalert2";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 export default function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const location = useLocation();
+
+  const role = localStorage.getItem("role");
+  const basePath = role === "admin" ? "/admin" : "/professor";
+
+  // ✅ ACTIVE ROUTE CHECK (FIXED)
+  const isActive = (path, exact = false) => {
+    if (exact) {
+      return location.pathname === path;
+    }
+    return location.pathname.startsWith(path);
+  };
 
   const logout = () => {
     Swal.fire({
@@ -37,70 +49,117 @@ export default function Sidebar() {
   const toggleSidebar = () => {
     setIsCollapsed((prev) => !prev);
   };
-  const role = localStorage.getItem("role");
-  const basePath = role === "admin" ? "/admin" : "/professor";
+
   return (
     <div
       className="d-flex flex-column min-vh-100 bg-primary text-white p-2 p-md-3 flex-shrink-0"
-      style={{ width: isCollapsed ? "84px" : "260px", transition: "width 0.2s ease" }}
+      style={{
+        width: isCollapsed ? "84px" : "260px",
+        transition: "width 0.2s ease",
+      }}
     >
-      <div className={`d-flex mb-3 ${isCollapsed ? "justify-content-center" : "justify-content-end"}`}>
+      {/* 🔽 TOGGLE */}
+      <div
+        className={`d-flex mb-3 ${
+          isCollapsed ? "justify-content-center" : "justify-content-end"
+        }`}
+      >
         <button
-          type="button"
           onClick={toggleSidebar}
           className="btn btn-sm btn-outline-light"
-          aria-label="Toggle menu"
         >
-          <i className={`fa-solid ${isCollapsed ? "fa-bars" : "fa-angle-left"}`}></i>
+          <i
+            className={`fa-solid ${
+              isCollapsed ? "fa-bars" : "fa-angle-left"
+            }`}
+          ></i>
         </button>
       </div>
 
-      {/* Logo */}
-      <div className={`d-flex align-items-center mb-3 mb-md-4 ${isCollapsed ? "justify-content-center" : "justify-content-start"}`}>
-        <i className={`fa-solid fa-trophy fs-4 ${isCollapsed ? "" : "me-2"}`}></i>
-        {!isCollapsed && <span className="fw-bold fs-5">Digital Notice Board</span>}
+      {/* 🔷 LOGO */}
+      <div
+        className={`d-flex align-items-center mb-4 ${
+          isCollapsed ? "justify-content-center" : ""
+        }`}
+      >
+        <i
+          className={`fa-solid fa-trophy fs-4 ${
+            isCollapsed ? "" : "me-2"
+          }`}
+        ></i>
+        {!isCollapsed && (
+          <span className="fw-bold fs-5">
+            Digital Notice Board
+          </span>
+        )}
       </div>
 
-      {/* Menu */}
+      {/* 🔗 MENU */}
       <ul className="nav nav-pills flex-column gap-2">
+
+        {/* ✅ Dashboard (EXACT MATCH FIX) */}
         <li className="nav-item">
           <Link
-            className={`nav-link text-white d-flex align-items-center px-2 px-md-3 ${isCollapsed ? "justify-content-center" : "justify-content-start"}`}
-            to={`${basePath}`}
-
+            to={basePath}
+            className={`nav-link d-flex align-items-center px-3 ${
+              isCollapsed ? "justify-content-center" : ""
+            } ${
+              isActive(basePath, true)
+                ? "bg-dark text-white"
+                : "text-white"
+            }`}
           >
             <i className={`fa-solid fa-house ${isCollapsed ? "" : "me-2"}`}></i>
             {!isCollapsed && <span>Dashboard</span>}
           </Link>
         </li>
 
+        {/* Notices */}
         <li className="nav-item">
           <Link
-            className={`nav-link text-white d-flex align-items-center px-2 px-md-3 ${isCollapsed ? "justify-content-center" : "justify-content-start"}`}
             to={`${basePath}/notices`}
-
+            className={`nav-link d-flex align-items-center px-3 ${
+              isCollapsed ? "justify-content-center" : ""
+            } ${
+              isActive(`${basePath}/notices`)
+                ? "bg-dark text-white"
+                : "text-white"
+            }`}
           >
-            <i className={`fa-solid fa-bullhorn ${isCollapsed ? "" : "me-2"}`} ></i>
+            <i className={`fa-solid fa-bullhorn ${isCollapsed ? "" : "me-2"}`}></i>
             {!isCollapsed && <span>Notices</span>}
           </Link>
         </li>
+
+        {/* My Notices */}
         <li className="nav-item">
           <Link
-            className={`nav-link text-white d-flex align-items-center px-2 px-md-3 ${isCollapsed ? "justify-content-center" : "justify-content-start"
-              }`}
             to={`${basePath}/my-notices`}
+            className={`nav-link d-flex align-items-center px-3 ${
+              isCollapsed ? "justify-content-center" : ""
+            } ${
+              isActive(`${basePath}/my-notices`)
+                ? "bg-dark text-white"
+                : "text-white"
+            }`}
           >
             <i className={`fa-solid fa-bell ${isCollapsed ? "" : "me-2"}`}></i>
             {!isCollapsed && <span>My Notices</span>}
           </Link>
         </li>
 
+        {/* Professors (Admin only) */}
         {role === "admin" && (
           <li className="nav-item">
             <Link
-              className={`nav-link text-white d-flex align-items-center px-2 px-md-3 ${isCollapsed ? "justify-content-center" : "justify-content-start"
-                }`}
               to="/admin/professors"
+              className={`nav-link d-flex align-items-center px-3 ${
+                isCollapsed ? "justify-content-center" : ""
+              } ${
+                isActive("/admin/professors")
+                  ? "bg-dark text-white"
+                  : "text-white"
+              }`}
             >
               <i className={`fa-solid fa-user-tie ${isCollapsed ? "" : "me-2"}`}></i>
               {!isCollapsed && <span>Professors</span>}
@@ -108,45 +167,66 @@ export default function Sidebar() {
           </li>
         )}
 
-
+        {/* Display Controls */}
         <li className="nav-item">
           <Link
-            className={`nav-link text-white d-flex align-items-center px-2 px-md-3 ${isCollapsed ? "justify-content-center" : "justify-content-start"}`}
-            to="/admin/display"
+            to={`${basePath}/display`}
+            className={`nav-link d-flex align-items-center px-3 ${
+              isCollapsed ? "justify-content-center" : ""
+            } ${
+              isActive(`${basePath}/display`)
+                ? "bg-dark text-white"
+                : "text-white"
+            }`}
           >
             <i className={`fa-solid fa-display ${isCollapsed ? "" : "me-2"}`}></i>
             {!isCollapsed && <span>Display Controls</span>}
           </Link>
         </li>
 
-        <li className="nav-item">
-          <Link
-            className={`nav-link text-white d-flex align-items-center px-2 px-md-3 ${isCollapsed ? "justify-content-center" : "justify-content-start"}`}
-            to="/admin/settings"
-          >
-            <i className={`fa-solid fa-gear ${isCollapsed ? "" : "me-2"}`}></i>
-            {!isCollapsed && <span>Settings</span>}
-          </Link>
-        </li>
       </ul>
 
-      {/* Profile at bottom */}
-      <div className="mt-4 mt-md-auto">
+      {/* 👤 PROFILE */}
+      <div className="mt-auto">
         <hr className="border-light" />
 
-        <div className={`d-flex align-items-center gap-2 ${isCollapsed ? "justify-content-center" : "justify-content-start"}`}>
+        <div
+          className={`d-flex align-items-center gap-2 ${
+            isCollapsed ? "justify-content-center" : ""
+          }`}
+        >
           <i className="fa-solid fa-circle-user fs-3"></i>
-          {!isCollapsed && <div>
-            <div className="fw-semibold">{localStorage.getItem("name")}</div>
-            <button
-              onClick={logout}
-              className="btn btn-sm btn-light mt-1"
-            >
-              Logout
-            </button>
-          </div>}
+
+          {!isCollapsed && (
+            <div>
+              <div className="fw-semibold">
+                {localStorage.getItem("name")}
+              </div>
+
+              <button
+                onClick={logout}
+                className="btn btn-sm btn-light mt-1"
+              >
+                Logout
+              </button>
+            </div>
+          )}
         </div>
       </div>
+
+      {/* 🎨 STYLE */}
+      <style>
+        {`
+        .nav-link {
+          transition: all 0.2s ease;
+          border-radius: 8px;
+        }
+
+        .nav-link:hover {
+          background-color: rgba(0,0,0,0.2);
+        }
+        `}
+      </style>
     </div>
   );
 }
