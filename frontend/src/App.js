@@ -13,6 +13,7 @@ import ForgotPassword from './pages/ForgotPassword';
 import MyNotice from "./pages/MyNotice";
 import NoticeDisplay from './components/NoticeDisplay';
 import DisplayControls from './components/DisplayControls';
+import AdminPage from './pages/AdminPage';
 function App() {
   return (
     <Routes>
@@ -24,18 +25,18 @@ function App() {
       <Route path='/unauthorized' element={<Unauthorized />} />
       <Route path='/document-view' element={<DocumentView />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
-
-      <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
-        <Route path="/admin" element={<AdminDashboard />} />
-        {/* <Route path="/admin-dashboard" element={<AdminDashboard />} /> */}
-      </Route>
+      {/* //professor routes */}
       <Route element={<ProtectedRoute allowedRoles={["professor"]} />}>
         <Route path='/professor' element={<ProfessorDashboard />} />
         <Route path='/professor/display' element={<DisplayControls />} />
         <Route path='/professor/notices' element={<ProfessorNotice />} />
         <Route path="/professor/my-notices" element={<MyNotice />} />
       </Route>
+
+      {/* //admin routes */}
       <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
+        <Route path="/admin" element={<AdminDashboard />} />
+        <Route path='/admin/admins' element={<AdminPage/>}/>
         <Route path='/admin/notices' element={<AdminNotice />} />
         <Route path='/admin/display' element={<DisplayControls />} />
         <Route path='/admin/professors' element={<AdminProfessor />} />

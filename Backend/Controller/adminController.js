@@ -8,8 +8,6 @@ exports.getAdminDashboard = (req, res) => {
     });
 }
 
-
-
 // add admin 
 exports.addAdmin = async (req, res) => {
     const { name, email, password } = req.body;
