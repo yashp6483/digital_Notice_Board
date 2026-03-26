@@ -60,32 +60,28 @@ export default function Sidebar() {
     >
       {/* 🔽 TOGGLE */}
       <div
-        className={`d-flex mb-3 ${
-          isCollapsed ? "justify-content-center" : "justify-content-end"
-        }`}
+        className={`d-flex mb-3 ${isCollapsed ? "justify-content-center" : "justify-content-end"
+          }`}
       >
         <button
           onClick={toggleSidebar}
           className="btn btn-sm btn-outline-light"
         >
           <i
-            className={`fa-solid ${
-              isCollapsed ? "fa-bars" : "fa-angle-left"
-            }`}
+            className={`fa-solid ${isCollapsed ? "fa-bars" : "fa-angle-left"
+              }`}
           ></i>
         </button>
       </div>
 
       {/* 🔷 LOGO */}
       <div
-        className={`d-flex align-items-center mb-4 ${
-          isCollapsed ? "justify-content-center" : ""
-        }`}
+        className={`d-flex align-items-center mb-4 ${isCollapsed ? "justify-content-center" : ""
+          }`}
       >
         <i
-          className={`fa-solid fa-trophy fs-4 ${
-            isCollapsed ? "" : "me-2"
-          }`}
+          className={`fa-solid fa-trophy fs-4 ${isCollapsed ? "" : "me-2"
+            }`}
         ></i>
         {!isCollapsed && (
           <span className="fw-bold fs-5">
@@ -101,13 +97,11 @@ export default function Sidebar() {
         <li className="nav-item">
           <Link
             to={basePath}
-            className={`nav-link d-flex align-items-center px-3 ${
-              isCollapsed ? "justify-content-center" : ""
-            } ${
-              isActive(basePath, true)
+            className={`nav-link d-flex align-items-center px-3 ${isCollapsed ? "justify-content-center" : ""
+              } ${isActive(basePath, true)
                 ? "bg-dark text-white"
                 : "text-white"
-            }`}
+              }`}
           >
             <i className={`fa-solid fa-house ${isCollapsed ? "" : "me-2"}`}></i>
             {!isCollapsed && <span>Dashboard</span>}
@@ -118,13 +112,11 @@ export default function Sidebar() {
         <li className="nav-item">
           <Link
             to={`${basePath}/notices`}
-            className={`nav-link d-flex align-items-center px-3 ${
-              isCollapsed ? "justify-content-center" : ""
-            } ${
-              isActive(`${basePath}/notices`)
+            className={`nav-link d-flex align-items-center px-3 ${isCollapsed ? "justify-content-center" : ""
+              } ${isActive(`${basePath}/notices`)
                 ? "bg-dark text-white"
                 : "text-white"
-            }`}
+              }`}
           >
             <i className={`fa-solid fa-bullhorn ${isCollapsed ? "" : "me-2"}`}></i>
             {!isCollapsed && <span>Notices</span>}
@@ -135,13 +127,11 @@ export default function Sidebar() {
         <li className="nav-item">
           <Link
             to={`${basePath}/my-notices`}
-            className={`nav-link d-flex align-items-center px-3 ${
-              isCollapsed ? "justify-content-center" : ""
-            } ${
-              isActive(`${basePath}/my-notices`)
+            className={`nav-link d-flex align-items-center px-3 ${isCollapsed ? "justify-content-center" : ""
+              } ${isActive(`${basePath}/my-notices`)
                 ? "bg-dark text-white"
                 : "text-white"
-            }`}
+              }`}
           >
             <i className={`fa-solid fa-bell ${isCollapsed ? "" : "me-2"}`}></i>
             {!isCollapsed && <span>My Notices</span>}
@@ -153,31 +143,39 @@ export default function Sidebar() {
           <li className="nav-item">
             <Link
               to="/admin/professors"
-              className={`nav-link d-flex align-items-center px-3 ${
-                isCollapsed ? "justify-content-center" : ""
-              } ${
-                isActive("/admin/professors")
+              className={`nav-link d-flex align-items-center px-3 ${isCollapsed ? "justify-content-center" : ""
+                } ${isActive("/admin/professors")
                   ? "bg-dark text-white"
                   : "text-white"
-              }`}
+                }`}
             >
               <i className={`fa-solid fa-user-tie ${isCollapsed ? "" : "me-2"}`}></i>
               {!isCollapsed && <span>Professors</span>}
             </Link>
           </li>
         )}
-
+        <li className="nav-item">
+          <Link
+            to={`${basePath}/admins`}
+            className={`nav-link d-flex align-items-center px-3 ${isCollapsed ? "justify-content-center" : ""
+              } ${isActive(`${basePath}/admins`)
+                ? "bg-dark text-white"
+                : "text-white"
+              }`}
+          >
+            <i className={`fa-solid fa-user-plus ${isCollapsed ? "" : "me-2"}`}></i>
+            {!isCollapsed && <span>Admin Controls</span>}
+          </Link>
+        </li>
         {/* Display Controls */}
         <li className="nav-item">
           <Link
             to={`${basePath}/display`}
-            className={`nav-link d-flex align-items-center px-3 ${
-              isCollapsed ? "justify-content-center" : ""
-            } ${
-              isActive(`${basePath}/display`)
+            className={`nav-link d-flex align-items-center px-3 ${isCollapsed ? "justify-content-center" : ""
+              } ${isActive(`${basePath}/display`)
                 ? "bg-dark text-white"
                 : "text-white"
-            }`}
+              }`}
           >
             <i className={`fa-solid fa-display ${isCollapsed ? "" : "me-2"}`}></i>
             {!isCollapsed && <span>Display Controls</span>}
@@ -191,9 +189,8 @@ export default function Sidebar() {
         <hr className="border-light" />
 
         <div
-          className={`d-flex align-items-center gap-2 ${
-            isCollapsed ? "justify-content-center" : ""
-          }`}
+          className={`d-flex align-items-center gap-2 ${isCollapsed ? "justify-content-center" : ""
+            }`}
         >
           <i className="fa-solid fa-circle-user fs-3"></i>
 

@@ -109,6 +109,9 @@ exports.updateNotice = async (req, res) => {
             {
                 new: true,
                 runValidators: true
+            },
+            {
+                returnDocument: 'after'
             }
         ).populate("createdBy", "name"); // 🔥 IMPORTANT
 
