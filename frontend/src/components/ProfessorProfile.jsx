@@ -1,11 +1,14 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar";
 import { Card, Form, Button, Row, Col } from "react-bootstrap";
 import Swal from "sweetalert2";
-import { getProfile, updateProfile } from "../servieces/userServices";
 import { useNavigate } from "react-router-dom";
+import {
+  getProfessorProfile,
+  updateProfessorProfile,
+} from "../servieces/professorServices";
 
-export default function Profile() {
+export default function ProfessorProfile() {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -14,23 +17,25 @@ export default function Profile() {
     phone: "",
     department: "",
     birthdate: "",
+    status: "active",
   });
 
   const [loading, setLoading] = useState(false);
 
-  // 🔥 FETCH PROFILE DATA
-  const fetchProfile = async () => {
+  const fetchProfile = useCallback(async () => {
     try {
-      const data = await getProfile();
+      const data = await getProfessorProfile();
+
+      localStorage.setItem("name", data.name || "");
+      localStorage.setItem("email", data.email || "");
 
       setFormData({
         name: data.name || "",
         email: data.email || "",
         phone: data.phone || "",
         department: data.department || "",
-        birthdate: data.birthdate
-          ? data.birthdate.split("T")[0]
-          : "",
+        birthdate: data.birthdate ? String(data.birthdate).split("T")[0] : "",
+        status: data.status || "active",
       });
     } catch (error) {
       if (error.status === 401 || error.status === 403) {
@@ -39,15 +44,14 @@ export default function Profile() {
         return;
       }
 
-      Swal.fire("Error", "Failed to load profile", "error");
+      Swal.fire("Error", error.message || "Failed to load profile", "error");
     }
-  };
+  }, [navigate]);
 
   useEffect(() => {
     fetchProfile();
-  }, []);
+  }, [fetchProfile]);
 
-  // 🔥 HANDLE CHANGE
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -55,13 +59,14 @@ export default function Profile() {
     });
   };
 
-  // 🔥 SUBMIT
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     setLoading(true);
+
     try {
-      await updateProfile(formData);
+      await updateProfessorProfile(formData);
+      localStorage.setItem("name", formData.name || "");
+      localStorage.setItem("email", formData.email || "");
 
       Swal.fire({
         icon: "success",
@@ -79,19 +84,15 @@ export default function Profile() {
   return (
     <div className="container-fluid">
       <div className="row min-vh-100">
-
         <Sidebar />
 
         <div className="col bg-body-secondary p-4">
-
           <h4 className="mb-4">My Profile</h4>
 
           <Card className="shadow-sm">
             <Card.Body>
-
               <Form onSubmit={handleSubmit}>
                 <Row className="g-3">
-
                   <Col md={6}>
                     <Form.Group>
                       <Form.Label>Name</Form.Label>
@@ -108,11 +109,7 @@ export default function Profile() {
                   <Col md={6}>
                     <Form.Group>
                       <Form.Label>Email</Form.Label>
-                      <Form.Control
-                        type="email"
-                        value={formData.email}
-                        disabled
-                      />
+                      <Form.Control type="email" value={formData.email} disabled />
                     </Form.Group>
                   </Col>
 
@@ -136,6 +133,7 @@ export default function Profile() {
                         value={formData.department}
                         onChange={handleChange}
                       >
+                        <option value="">Select department</option>
                         <option>Computer Engineering</option>
                         <option>Mechenical Engineering</option>
                         <option>Civil Engineering</option>
@@ -156,8 +154,29 @@ export default function Profile() {
                       />
                     </Form.Group>
                   </Col>
-
                 </Row>
+
+                <Form.Group className="mb-3 mt-3">
+                  <Form.Label>Status</Form.Label>
+
+                  <Form.Check
+                    type="radio"
+                    label="Active"
+                    name="status"
+                    value="active"
+                    checked={formData.status === "active"}
+                    onChange={handleChange}
+                  />
+
+                  <Form.Check
+                    type="radio"
+                    label="Inactive"
+                    name="status"
+                    value="inactive"
+                    checked={formData.status === "inactive"}
+                    onChange={handleChange}
+                  />
+                </Form.Group>
 
                 <div className="mt-4">
                   <Button type="submit" disabled={loading}>
@@ -165,10 +184,8 @@ export default function Profile() {
                   </Button>
                 </div>
               </Form>
-
             </Card.Body>
           </Card>
-
         </div>
       </div>
     </div>

@@ -37,3 +37,28 @@ export const calculateProfessorStats = (professors = []) => {
     getInitialProfessorStats()
   );
 };
+
+// ✅ Initial Admin Stats
+export const getInitialAdminStats = () => ({
+  total: 0,
+  active: 0,
+  inactive: 0
+});
+
+
+// ✅ Calculate Admin Stats
+export const calculateAdminStats = (admins = []) => {
+  return admins.reduce(
+    (acc, admin) => {
+      acc.total += 1;
+
+      const status = String(admin.status || "").toLowerCase();
+
+      if (status === "active") acc.active += 1;
+      else if (status === "inactive") acc.inactive += 1;
+
+      return acc;
+    },
+    getInitialAdminStats()
+  );
+};

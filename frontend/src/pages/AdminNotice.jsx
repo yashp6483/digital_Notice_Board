@@ -82,7 +82,7 @@ export default function AdminNotice() {
                 <div className="col bg-body-secondary p-4">
 
                     {/* HEADER */}
-                    <div className="d-flex justify-content-between align-items-center mt-3 mb-4">
+                    <div className="d-flex justify-content-between align-items-center p-3 rounded">
                         <h4 className="mb-0">Notice Management</h4>
 
                         {/* USER ICON */}
@@ -103,7 +103,7 @@ export default function AdminNotice() {
                     </div>
 
                     {/* STATS */}
-                    <div className="row g-3 mb-4">
+                    <div className="row g-3 mb-4 mt-3">
                         <StateCards
                             title="Total Notices"
                             value={noticeStats.total}

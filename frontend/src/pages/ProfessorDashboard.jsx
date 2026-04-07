@@ -184,7 +184,7 @@ export default function ProfessorDashboard() {
                       variant="primary"
                       size="sm"
                       onClick={() =>
-                        navigate("/admin/notices")
+                        navigate("/professor/notices")
                       }
                     >
                       View All Notices →

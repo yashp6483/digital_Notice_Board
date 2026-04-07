@@ -14,6 +14,8 @@ import MyNotice from "./pages/MyNotice";
 import NoticeDisplay from './components/NoticeDisplay';
 import DisplayControls from './components/DisplayControls';
 import AdminPage from './pages/AdminPage';
+import AdminProfile from './components/AdminProfile';
+import ProfessorProfile from './components/ProfessorProfile';
 function App() {
   return (
     <Routes>
@@ -31,12 +33,14 @@ function App() {
         <Route path='/professor/display' element={<DisplayControls />} />
         <Route path='/professor/notices' element={<ProfessorNotice />} />
         <Route path="/professor/my-notices" element={<MyNotice />} />
+        <Route path="/professor/profile" element={<ProfessorProfile />} />
       </Route>
 
       {/* //admin routes */}
       <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path='/admin/admins' element={<AdminPage/>}/>
+        <Route path='/admin/profile'element={<AdminProfile/>}/>
         <Route path='/admin/notices' element={<AdminNotice />} />
         <Route path='/admin/display' element={<DisplayControls />} />
         <Route path='/admin/professors' element={<AdminProfessor />} />

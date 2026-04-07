@@ -5,7 +5,21 @@ exports. professorDashboard = (req, res) => {
     message: "Welcome Professor",
     user: req.user
   });
-}
+};
+
+exports.getProfessorProfile = async (req, res) => {
+    try {
+        const professor = await User.findById(req.user._id).select("-password");
+
+        if (!professor) {
+            return res.status(404).json({ message: "Professor not found" });
+        }
+
+        res.json({ professor });
+    } catch (err) {
+        res.status(500).json({ message: "Failed to fetch profile" });
+    }
+};
 
 exports.addProfessor = async (req, res) => {
 
@@ -113,5 +127,35 @@ exports.updateProfessor = async (req, res) => {
             message: "Professor Update failed",
             err: err.message
         });
+    }
+};
+
+exports.updateProfessorProfile = async (req, res) => {
+    try {
+        const professor = await User.findById(req.user._id);
+
+        if (!professor) {
+            return res.status(404).json({ message: "Professor not found" });
+        }
+
+        const { name, phone, department, birthdate, status } = req.body;
+
+        professor.name = name ?? professor.name;
+        professor.phone = phone ?? professor.phone;
+        professor.department = department ?? professor.department;
+        professor.birthdate = birthdate ?? professor.birthdate;
+        professor.status = status ?? professor.status;
+
+        await professor.save();
+
+        res.json({
+            message: "Profile updated successfully",
+            professor: professor.toObject({ versionKey: false, transform: (_doc, ret) => {
+                delete ret.password;
+                return ret;
+            }})
+        });
+    } catch (err) {
+        res.status(500).json({ message: "Profile update failed" });
     }
 };

@@ -14,7 +14,8 @@ export default function TopHeader() {
 
     // 👉 Handle profile click
     const handleProfileClick = () => {
-        navigate('/profile'); // change route if needed
+        const profilePath = role === "professor" ? "/professor/profile" : "/admin/profile";
+        navigate(profilePath);
     };
 
     return (
