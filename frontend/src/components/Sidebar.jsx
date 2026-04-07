@@ -154,17 +154,32 @@ export default function Sidebar() {
             </Link>
           </li>
         )}
+        {role === "admin" && (
+          <li className="nav-item">
+            <Link
+              to={`${basePath}/admins`}
+              className={`nav-link d-flex align-items-center px-3 ${isCollapsed ? "justify-content-center" : ""
+                } ${isActive(`${basePath}/admins`)
+                  ? "bg-dark text-white"
+                  : "text-white"
+                }`}
+            >
+              <i className={`fa-solid fa-user-plus ${isCollapsed ? "" : "me-2"}`}></i>
+              {!isCollapsed && <span>Admin Controls</span>}
+            </Link>
+          </li>
+        )}
         <li className="nav-item">
           <Link
-            to={`${basePath}/admins`}
+            to={`${basePath}/profile`}
             className={`nav-link d-flex align-items-center px-3 ${isCollapsed ? "justify-content-center" : ""
-              } ${isActive(`${basePath}/admins`)
+              } ${isActive(`${basePath}/profile`)
                 ? "bg-dark text-white"
                 : "text-white"
               }`}
           >
-            <i className={`fa-solid fa-user-plus ${isCollapsed ? "" : "me-2"}`}></i>
-            {!isCollapsed && <span>Admin Controls</span>}
+            <i className={`fa-solid fa-id-card ${isCollapsed ? "" : "me-2"}`}></i>
+            {!isCollapsed && <span>My Profile</span>}
           </Link>
         </li>
         {/* Display Controls */}

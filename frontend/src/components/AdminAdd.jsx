@@ -1,22 +1,23 @@
 import React, { useEffect, useState } from "react";
 import { Modal, ModalHeader, ModalBody, ModalTitle, Form, Button } from "react-bootstrap";
-import { Department } from "../constants/categoryVariant";
 import Swal from "sweetalert2";
 
-export default function ProfessorAdd({ show, onClose, onSubmit, mode = "add", prof }) {
+// ✅ Import services
+import { addAdmin, updateAdmin } from "../servieces/adminServices";
+
+export default function AdminAdd({ show, onClose, onSubmit, mode = "add", admin }) {
 
     const defaultForm = {
-        name: "Prof. ",
-        department: "Computer Engineering",
+        name: "",
         email: "",
-        phone: "",
-        birthdate: "",
         password: "",
+        role: "admin",
         status: "active"
     };
 
     const [form, setForm] = useState(defaultForm);
 
+    // ✅ Handle input change
     const handleChange = (e) => {
         const { name, value } = e.target;
 
@@ -25,93 +26,65 @@ export default function ProfessorAdd({ show, onClose, onSubmit, mode = "add", pr
             [name]: value
         });
     };
+
+    // ✅ Prefill form in edit mode
     useEffect(() => {
-        if (mode === "edit" && prof) {
+        if (mode === "edit" && admin) {
             setForm({
-                name: prof.name || "",
-                department: prof.department || "",
-                email: prof.email || "",
-                phone: prof.phone || "",
-                birthdate: prof.birthdate
-                    ? prof.birthdate.split("-").reverse().join("-")
-                    : "",
+                name: admin.name || "",
+                email: admin.email || "",
                 password: "",
-                status: prof.status === "Active" ? "active" : "inactive"
+                role: admin.role || "admin",
+                status: admin.status === "Active" ? "active" : "inactive"
             });
         } else {
             setForm(defaultForm);
         }
-    }, [mode, prof, show]);
+    }, [mode, admin, show]);
 
 
 
+    // ✅ Submit handler (using services)
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        const token = localStorage.getItem("token");
-        if (!token) {
-            Swal.fire({
-                icon: "warning",
-                title: "Session expired",
-                text: "Please login again."
-            });
-            return;
-        }
-
-        const url = mode === "edit"
-            ? `http://localhost:5000/admin/professor/update/${prof._id}`
-            : "http://localhost:5000/admin/professor";
-
-        const method = mode === "edit" ? "PUT" : "POST";
-
-        const payload = { ...form };
-
-        if (mode === "edit" && !payload.password) {
-            delete payload.password;
-        }
-
         try {
-            const res = await fetch(url, {
-                method,
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`
-                },
-                body: JSON.stringify(payload)
-            });
+            let payload = { ...form };
 
-            const data = await res.json();
+            // ❌ Remove password if empty in edit
+            if (mode === "edit" && !payload.password) {
+                delete payload.password;
+            }
 
-            if (!res.ok) {
-                Swal.fire({
-                    icon: "error",
-                    title: "Action failed",
-                    text: data.message || "Unable to save professor"
-                });
-                return;
+            if (mode === "edit") {
+                await updateAdmin(admin._id, payload);
+            } else {
+                await addAdmin(payload);
             }
 
             Swal.fire({
                 icon: "success",
                 title: mode === "edit"
-                    ? "Professor updated successfully"
-                    : "Professor added successfully",
+                    ? "Admin updated successfully"
+                    : "Admin added successfully",
                 timer: 1500,
                 showConfirmButton: false
             });
 
-            onSubmit?.();
+            onSubmit?.(); // refresh list
             onClose();
 
         } catch (err) {
             console.log(err);
+
             Swal.fire({
                 icon: "error",
-                title: "Server error",
-                text: "Unable to save professor right now."
+                title: "Action failed",
+                text: err.message || "Unable to save admin"
             });
         }
     };
+
 
 
     return (
@@ -121,13 +94,13 @@ export default function ProfessorAdd({ show, onClose, onSubmit, mode = "add", pr
 
                 <ModalHeader closeButton>
                     <ModalTitle>
-                        {mode === "edit" ? "Edit Professor" : "Add Professor"}
+                        {mode === "edit" ? "Edit Admin" : "Add Admin"}
                     </ModalTitle>
-
                 </ModalHeader>
 
                 <ModalBody>
 
+                    {/* Name */}
                     <Form.Group className="mb-3">
                         <Form.Label>Name</Form.Label>
                         <Form.Control
@@ -138,15 +111,19 @@ export default function ProfessorAdd({ show, onClose, onSubmit, mode = "add", pr
                         />
                     </Form.Group>
 
+                    {/* Email */}
                     <Form.Group className="mb-3">
                         <Form.Label>Email</Form.Label>
                         <Form.Control
                             name="email"
+                            type="email"
                             value={form.email}
                             onChange={handleChange}
+                            required
                         />
                     </Form.Group>
 
+                    {/* Password only for add */}
                     {mode === "add" && (
                         <Form.Group className="mb-3">
                             <Form.Label>Password</Form.Label>
@@ -160,28 +137,6 @@ export default function ProfessorAdd({ show, onClose, onSubmit, mode = "add", pr
                         </Form.Group>
                     )}
 
-                    <Form.Group className="mb-3">
-                        <Form.Label>Department</Form.Label>
-                        <Form.Select
-                            name="department"
-                            value={form.department}
-                            onChange={handleChange}
-                        >
-                            {Department.map((value, index) => (
-                                <option key={index}>{value}</option>
-                            ))}
-                        </Form.Select>
-                    </Form.Group>
-                    <Form.Group className="mb-3">
-                        <Form.Label>Birthdate</Form.Label>
-                        <Form.Control
-                            type="date"
-                            name="birthdate"
-                            value={form.birthdate}
-                            onChange={handleChange}
-                        />
-                    </Form.Group>
-
                     {/* Role */}
                     <Form.Group className="mb-3">
                         <Form.Label>Role</Form.Label>
@@ -194,15 +149,8 @@ export default function ProfessorAdd({ show, onClose, onSubmit, mode = "add", pr
                             <option value="professor">Professor</option>
                         </Form.Select>
                     </Form.Group>
-                    <Form.Group className="mb-3">
-                        <Form.Label>Phone</Form.Label>
-                        <Form.Control
-                            name="phone"
-                            value={form.phone}
-                            onChange={handleChange}
-                        />
-                    </Form.Group>
 
+                    {/* Status */}
                     <Form.Group className="mb-3">
                         <Form.Label>Status</Form.Label>
 
@@ -223,12 +171,12 @@ export default function ProfessorAdd({ show, onClose, onSubmit, mode = "add", pr
                             checked={form.status === "inactive"}
                             onChange={handleChange}
                         />
-
                     </Form.Group>
-                    <Button type="submit" variant="primary">
-                        {mode === "edit" ? "Update Professor" : "Add Professor"}
-                    </Button>
 
+                    {/* Submit */}
+                    <Button type="submit" variant="primary">
+                        {mode === "edit" ? "Update Admin" : "Add Admin"}
+                    </Button>
 
                 </ModalBody>
 

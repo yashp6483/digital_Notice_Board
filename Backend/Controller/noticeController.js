@@ -33,7 +33,6 @@ exports.createNotice = async (req, res) => {
 
         populatedNotice.type = type;
 
-        // 🔥 ✅ CORRECT SOCKET EMIT
         req.io.emit("new_notice", populatedNotice);
 
         res.status(201).json({
@@ -72,7 +71,6 @@ exports.deleteNotice = async (req, res) => {
             return res.status(404).json({ message: "NO NOTICE FOUND" });
         }
 
-        // 🔥 SOCKET EMIT (IMPORTANT)
         req.io.emit("delete_notice", id);
 
         res.status(200).json({
@@ -113,13 +111,12 @@ exports.updateNotice = async (req, res) => {
             {
                 returnDocument: 'after'
             }
-        ).populate("createdBy", "name"); // 🔥 IMPORTANT
+        ).populate("createdBy", "name"); 
 
         if (!notice) {
             return res.status(404).json({ message: "Notice not found" });
         }
 
-        // 🔥 SOCKET EMIT (VERY IMPORTANT)
         req.io.emit("update_notice", notice);
 
         res.json({
@@ -160,7 +157,6 @@ exports.getPublicNotice = async (req, res) => {
             .populate("createdBy", "name")
             .lean();
 
-        // 🔥 ADD TYPE LOGIC HERE
         const formattedNotices = notices.map((notice) => {
             let type = "text";
 

@@ -5,10 +5,23 @@ const router = express.Router();
 const { verifyToken,authorize } = require("../middleware/authMiddleware");
 
 //controllers 
-const { getAdminDashboard,  addAdmin } = require("../Controller/adminController");
+const {
+    getAdminDashboard,
+    getAdminProfile,
+    updateAdminProfile,
+    addAdmin,
+    getAdmins,
+    deleteAdmin,
+    updateAdmin
+} = require("../Controller/adminController");
 
 
-router.get("/dashboard", verifyToken, authorize("admin"), getAdminDashboard);
-router.post("/addAdmin",verifyToken,authorize("admin"),addAdmin)
+router.get("/", verifyToken, authorize("admin"), getAdminDashboard);
+router.get("/profile", verifyToken, authorize("admin"), getAdminProfile);
+router.put("/profile", verifyToken, authorize("admin"), updateAdminProfile);
+router.get("/admins",verifyToken,authorize("admin"),getAdmins);
+router.post("/addAdmin",verifyToken,authorize("admin"),addAdmin);
+router.delete("/delete/:id",verifyToken,authorize("admin"),deleteAdmin);
+router.put("/update/:id",verifyToken,authorize("admin"),updateAdmin);
 
 module.exports = router;
