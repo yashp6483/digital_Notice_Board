@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import io from "socket.io-client";
 
 // 🔥 SOCKET CONFIG
-const socket = io("http://localhost:5000", {
+const socket = io({
   transports: ["websocket"],
   reconnection: true,
   reconnectionAttempts: Infinity,
