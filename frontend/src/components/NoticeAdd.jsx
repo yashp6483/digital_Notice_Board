@@ -83,8 +83,8 @@ export default function NoticeAdd({ show, onClose, onSubmit, mode = "add", notic
         });
 
         const url = mode === "edit"
-            ? `http://localhost:5000/admin/notice/update/${notice._id}`
-            : "http://localhost:5000/admin/notice";
+            ? `/admin/notice/update/${notice._id}`
+            : "/admin/notice";
 
         const method = mode === "edit" ? "PUT" : "POST";
 
