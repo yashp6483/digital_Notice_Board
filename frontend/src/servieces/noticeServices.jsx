@@ -7,7 +7,7 @@ export const fetchNotice = async () => {
         throw error;
     }
 
-    const res = await fetch(`http://localhost:5000/${role}/notices`, {
+    const res = await fetch(`/${role}/notices`, {
         headers: {
             Authorization: `Bearer ${token}`
         }
@@ -37,7 +37,7 @@ export const mapNoticeForTable = (notice) => ({
     status: notice.status === "inactive" ? "Inactive" : "Active"
 })
 
-export const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:5000";
+export const API_BASE_URL = "";
 
 export const resolveDocumentUrl = (value) => {
     if (!value || typeof value !== "string") return null;
@@ -75,7 +75,7 @@ export const deleteNotice = async (id) => {
         error.status = 401;
         throw error;
     }
-    const res = await fetch(`http://localhost:5000/admin/notice/delete/${id}`, {
+    const res = await fetch(`/admin/notice/delete/${id}`, {
         method: "DELETE",
         headers: {
             Authorization: `Bearer ${token}`,
@@ -96,7 +96,7 @@ export const deleteNotice = async (id) => {
 export const updateNotice = async (id, formData) => {
     const token = localStorage.getItem("token");
 
-    const res = await fetch(`http://localhost:5000/admin/notice/update/${id}`, {
+    const res = await fetch(`/admin/notice/update/${id}`, {
         method: "PUT",
         headers: {
             Authorization: `Bearer ${token}`,
@@ -118,7 +118,7 @@ export const updateNotice = async (id, formData) => {
 // services/noticeServices.js
 export const fetchMyNotice = async () => {
     const role = localStorage.getItem("role");
-    const res = await fetch(`http://localhost:5000/${role}/my-notices`, {
+    const res = await fetch(`/${role}/my-notices`, {
         headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`
         }
@@ -132,7 +132,7 @@ export const fetchMyNotice = async () => {
 };
 
 export const fetchPublicNotices = async () => {
-    const res = await fetch(`http://localhost:5000/admin/notice`);
+    const res = await fetch(`/admin/notice`);
 
     const data = await res.json();
 
