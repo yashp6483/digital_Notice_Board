@@ -59,8 +59,8 @@ export default function ProfessorAdd({ show, onClose, onSubmit, mode = "add", pr
         }
 
         const url = mode === "edit"
-            ? `http://localhost:5000/admin/professor/update/${prof._id}`
-            : "http://localhost:5000/admin/professor";
+            ? `/admin/professor/update/${prof._id}`
+            : "/admin/professor";
 
         const method = mode === "edit" ? "PUT" : "POST";
 
