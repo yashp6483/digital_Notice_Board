@@ -44,7 +44,7 @@ const NoticeDisplay = () => {
   // 🔥 FETCH NOTICES
   const fetchNotices = async () => {
     try {
-      const res = await fetch("http://localhost:5000/display/notices");
+      const res = await fetch("/display/notices");
       const data = await res.json();
       setNotices(data.notices || []);
     } catch (err) {
