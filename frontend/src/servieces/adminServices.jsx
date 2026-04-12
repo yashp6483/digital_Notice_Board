@@ -1,6 +1,6 @@
 import { formatDate } from "./noticeServices";
 
-const BASE_URL = "http://localhost:5000/admin";
+const BASE_URL = "/admin";
 
 
 // ✅ Get All Admins
