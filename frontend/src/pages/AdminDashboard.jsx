@@ -22,7 +22,6 @@ import {
 export default function AdminDashboard() {
   const navigate = useNavigate();
 
-  // ✅ FIXED STATES
   const [noticeStats, setNoticeStats] = useState(getInitialNoticeStats());
   const [professorStats, setProfessorStats] = useState(getInitialProfessorStats());
   const [adminStats, setAdminStats] = useState(getInitialAdminStats());
@@ -65,44 +64,52 @@ export default function AdminDashboard() {
   }, [loadDashboardData]);
 
   return (
-    <div className='container-fluid'>
-      <div className='row min-vh-100'>
+    <div className='container-fluid p-0'>
+      <div className='d-flex min-vh-100 overflow-hidden'>
 
         <Sidebar />
 
-        <div className='col p-4 bg-body-secondary'>
+        <div className='flex-grow-1 p-3 p-md-4 overflow-auto custom-scrollbar' style={{ backgroundColor: "#f8fafc", height: "100vh" }}>
 
           <TopHeader />
 
-          {/* ✅ STATS */}
-          <div className="row g-3 mb-4 mt-3">
+          {/* STATS SECTION */}
+          <div className="row g-4 mb-3">
+            <StateCards title="Total Notices" value={noticeStats.total} icon="fa-bullhorn" color="primary" />
+            <StateCards title="Active Notices" value={noticeStats.active} icon="fa-circle-check" color="info" />
+            <StateCards title="Inactive Notices" value={noticeStats.inactive} icon="fa-clock" color="warning" />
+            
+            <StateCards title="Total Professors" value={professorStats.total} icon="fa-user-tie" color="secondary" />
+            <StateCards title="Active Professors" value={professorStats.active} icon="fa-user-check" color="success" />
+            <StateCards title="Inactive Professors" value={professorStats.inactive} icon="fa-user-slash" color="danger" />
 
-            <StateCards title="Total Notices" value={noticeStats.total} bg="primary" />
-            <StateCards title="Active Notices" value={noticeStats.active} bg="info" />
-            <StateCards title="Inactive Notices" value={noticeStats.inactive} bg="warning" />
-
-            <StateCards title="Total Professors" value={professorStats.total} bg="secondary" />
-            <StateCards title="Active Professors" value={professorStats.active} bg="success" />
-            <StateCards title="Inactive Professors" value={professorStats.inactive} bg="danger" />
-
-            {/* ✅ NEW ADMIN CARDS */}
-            <StateCards title="Total Admins" value={adminStats.total} bg="dark" />
-            <StateCards title="Active Admins" value={adminStats.active} bg="success" />
-
+            <StateCards title="Total Admins" value={adminStats.total} icon="fa-user-shield" color="dark" />
+            <StateCards title="Active Admins" value={adminStats.active} icon="fa-shield-check" color="success" />
           </div>
 
-          {/* TABLES */}
-          <div className='row'>
-            <div className='col-12 col-lg-6 mb-4'>
-              <RecentNotices />
+          {/* TABLES SECTION */}
+          <div className='row g-4'>
+            <div className='col-12 col-xl-7'>
+                <div className="card border-0 shadow-sm rounded-4 h-100 overflow-hidden">
+                    <RecentNotices />
+                </div>
             </div>
-            <div className='col-12 col-lg-6 mb-4'>
-              <ProfessorList showDetails={false} maxEntries={5} />
+            <div className='col-12 col-xl-5'>
+                <div className="card border-0 shadow-sm rounded-4 h-100 overflow-hidden">
+                    <ProfessorList showDetails={false} maxEntries={5} />
+                </div>
             </div>
           </div>
 
         </div>
       </div>
+      <style>
+        {`
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        `}
+      </style>
     </div>
   )
 }

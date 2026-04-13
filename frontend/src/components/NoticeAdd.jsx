@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { Modal, Form, Button } from "react-bootstrap";
+import { Modal, Form, Button, Row, Col } from "react-bootstrap";
 import { categoryVariant } from "../constants/categoryVariant";
 import Swal from "sweetalert2";
+import { buildApiUrl } from "../config/api";
 
 const toInputDate = (value) => {
     if (!value) return new Date().toISOString().split("T")[0];
-
-    // Already ISO
     if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
 
     const date = new Date(value);
@@ -14,7 +13,6 @@ const toInputDate = (value) => {
         return date.toISOString().split("T")[0];
     }
 
-    // Handle DD-MM-YYYY
     const parts = value.split("-");
     if (parts.length === 3) {
         const [day, month, year] = parts;
@@ -69,11 +67,7 @@ export default function NoticeAdd({ show, onClose, onSubmit, mode = "add", notic
 
         const token = localStorage.getItem("token");
         if (!token) {
-            Swal.fire({
-                icon: "warning",
-                title: "Session expired",
-                text: "Please login again."
-            });
+            Swal.fire({ icon: "warning", title: "Session expired", text: "Please login again." });
             return;
         }
 
@@ -83,12 +77,15 @@ export default function NoticeAdd({ show, onClose, onSubmit, mode = "add", notic
         });
 
         const url = mode === "edit"
-            ? `http://localhost:5000/admin/notice/update/${notice._id}`
-            : "http://localhost:5000/admin/notice";
+            ? buildApiUrl(`admin/notice/update/${notice._id}`)
+            : buildApiUrl("admin/notice");
 
         const method = mode === "edit" ? "PUT" : "POST";
 
         try {
+            console.log("Submitting notice to:", url);
+            console.log("Form Data:", Object.fromEntries(formData.entries()));
+
             const res = await fetch(url, {
                 method,
                 headers: { Authorization: `Bearer ${token}` },
@@ -96,8 +93,10 @@ export default function NoticeAdd({ show, onClose, onSubmit, mode = "add", notic
             });
 
             const data = await res.json();
+            console.log("Server Response:", data);
 
             if (!res.ok) {
+                console.error("Notice submission failed:", data);
                 Swal.fire({
                     icon: "error",
                     title: mode === "edit" ? "Update failed" : "Creation failed",
@@ -117,69 +116,125 @@ export default function NoticeAdd({ show, onClose, onSubmit, mode = "add", notic
 
         } catch (err) {
             console.error(err);
-            Swal.fire({
-                icon: "error",
-                title: "Server error",
-                text: "Unable to save notice right now."
-            });
+            Swal.fire({ icon: "error", title: "Server error", text: "Unable to save notice right now." });
         }
     };
 
     return (
-        <Modal show={show} onHide={onClose} centered>
+        <Modal show={show} onHide={onClose} centered size="lg">
             <Form onSubmit={handleSubmit}>
-                <Modal.Header closeButton>
-                    <Modal.Title>{mode === "edit" ? "Edit Notice" : "Add Notice"}</Modal.Title>
+                <Modal.Header closeButton className="border-0 pb-0">
+                    <Modal.Title className="fw-bold text-dark">
+                        {mode === "edit" ? "📝 Edit Notice" : "📢 Create New Notice"}
+                    </Modal.Title>
                 </Modal.Header>
 
-                <Modal.Body>
+                <Modal.Body className="px-4 py-4">
+                    <Row className="g-3">
+                        <Col md={12}>
+                            <Form.Group>
+                                <Form.Label className="small fw-bold text-uppercase text-muted">Notice Title</Form.Label>
+                                <Form.Control 
+                                    name="title" 
+                                    className="bg-light border-0 py-2 rounded-3"
+                                    value={form.title} 
+                                    onChange={handleChange} 
+                                    placeholder="e.g., Final Examination Schedule 2026"
+                                    required 
+                                />
+                            </Form.Group>
+                        </Col>
 
-                    <Form.Group className="mb-3">
-                        <Form.Label>Title</Form.Label>
-                        <Form.Control name="title" value={form.title} onChange={handleChange} required />
-                    </Form.Group>
+                        <Col md={6}>
+                            <Form.Group>
+                                <Form.Label className="small fw-bold text-uppercase text-muted">Category</Form.Label>
+                                <Form.Select 
+                                    name="category" 
+                                    className="bg-light border-0 py-2 rounded-3"
+                                    value={form.category} 
+                                    onChange={handleChange}
+                                >
+                                    {Object.keys(categoryVariant).map(c => (
+                                        <option key={c}>{c}</option>
+                                    ))}
+                                </Form.Select>
+                            </Form.Group>
+                        </Col>
 
-                    <Form.Group className="mb-3">
-                        <Form.Label>Category</Form.Label>
-                        <Form.Select name="category" value={form.category} onChange={handleChange}>
-                            {Object.keys(categoryVariant).map(c => (
-                                <option key={c}>{c}</option>
-                            ))}
-                        </Form.Select>
-                    </Form.Group>
+                        <Col md={6}>
+                            <Form.Group>
+                                <Form.Label className="small fw-bold text-uppercase text-muted">Status</Form.Label>
+                                <div className="d-flex gap-3 pt-1">
+                                    <Form.Check 
+                                        type="radio" 
+                                        label="Active" 
+                                        name="status" 
+                                        id="notice-active"
+                                        value="active"
+                                        checked={form.status === "active"} 
+                                        onChange={handleChange} 
+                                    />
+                                    <Form.Check 
+                                        type="radio" 
+                                        label="Inactive" 
+                                        name="status" 
+                                        id="notice-inactive"
+                                        value="inactive"
+                                        checked={form.status === "inactive"} 
+                                        onChange={handleChange} 
+                                    />
+                                </div>
+                            </Form.Group>
+                        </Col>
 
-                    <Form.Group className="mb-3">
-                        <Form.Label>Publish Date</Form.Label>
-                        <Form.Control type="date" name="publishedAt" value={form.publishedAt} onChange={handleChange} />
-                    </Form.Group>
+                        <Col md={12}>
+                            <Form.Group>
+                                <Form.Label className="small fw-bold text-uppercase text-muted">Publish Date</Form.Label>
+                                <Form.Control 
+                                    type="date" 
+                                    name="publishedAt" 
+                                    className="bg-light border-0 py-2 rounded-3"
+                                    value={form.publishedAt} 
+                                    onChange={handleChange} 
+                                />
+                            </Form.Group>
+                        </Col>
 
-                    <Form.Group className="mb-3">
-                        <Form.Label>Status</Form.Label>
-                        <Form.Check type="radio" label="Active" name="status" value="active"
-                            checked={form.status === "active"} onChange={handleChange} />
-                        <Form.Check type="radio" label="Inactive" name="status" value="inactive"
-                            checked={form.status === "inactive"} onChange={handleChange} />
-                    </Form.Group>
+                        <Col md={12}>
+                            <Form.Group>
+                                <Form.Label className="small fw-bold text-uppercase text-muted">Description</Form.Label>
+                                <Form.Control 
+                                    as="textarea" 
+                                    name="description"
+                                    rows={3}
+                                    className="bg-light border-0 rounded-3"
+                                    value={form.description} 
+                                    onChange={handleChange} 
+                                    placeholder="Provide brief details about the notice..."
+                                    required
+                                />
+                            </Form.Group>
+                        </Col>
 
-                    <Form.Group className="mb-3">
-                        <Form.Label>Description</Form.Label>
-                        <Form.Control as="textarea" name="description"
-                            value={form.description} onChange={handleChange} />
-                    </Form.Group>
-
-                    <Form.Group>
-                        <Form.Label>Document</Form.Label>
-                        <Form.Control type="file" name="document"
-                            accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
-                            onChange={handleChange} />
-                    </Form.Group>
-
+                        <Col md={12}>
+                            <Form.Group>
+                                <Form.Label className="small fw-bold text-uppercase text-muted">Attachment</Form.Label>
+                                <Form.Control 
+                                    type="file" 
+                                    name="document"
+                                    className="bg-light border-0 py-2 rounded-3"
+                                    accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
+                                    onChange={handleChange} 
+                                />
+                            </Form.Group>
+                        </Col>
+                    </Row>
                 </Modal.Body>
 
-                <Modal.Footer>
-                    <Button variant="secondary" onClick={onClose}>Cancel</Button>
-                    <Button type="submit">
-                        {mode === "edit" ? "Update Notice" : "Add Notice"}
+                <Modal.Footer className="border-0 pt-0 px-4 pb-4">
+                    <Button variant="light" className="px-4 fw-bold text-muted" onClick={onClose}>Discard</Button>
+                    <Button type="submit" className="px-4 fw-bold shadow-sm">
+                        {mode === "edit" ? "Update Broadcast" : "Post Notice"}
                     </Button>
                 </Modal.Footer>
             </Form>

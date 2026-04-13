@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Sidebar from '../components/Sidebar';
+import TopHeader from '../components/Topheader';
 import StateCards from '../components/StateCards';
 import { fetchNotice } from '../servieces/noticeServices';
 import { fetchProfessor } from '../servieces/professorServices';
@@ -19,14 +20,13 @@ import AdminList from './AdminList';
 export default function AdminPage() {
     const navigate = useNavigate();
 
-    // ✅ FIXED STATES
     const [noticeStats, setNoticeStats] = useState(getInitialNoticeStats());
     const [professorStats, setProfessorStats] = useState(getInitialProfessorStats());
     const [adminStats, setAdminStats] = useState(getInitialAdminStats());
-
-    const name = localStorage.getItem("name");
+    const [loading, setLoading] = useState(false);
 
     const loadPageStats = useCallback(async () => {
+        setLoading(true);
         try {
             const [noticesFromApi, professorsFromApi, adminsFromApi] = await Promise.all([
                 fetchNotice(),
@@ -44,18 +44,18 @@ export default function AdminPage() {
 
         } catch (error) {
             console.error(error);
-
             if (error.status === 401 || error.status === 403) {
                 localStorage.clear();
                 navigate("/unauthorized");
                 return;
             }
-
             Swal.fire({
                 icon: "error",
                 title: "Failed to load data",
                 text: error.message || "Something went wrong"
             });
+        } finally {
+            setLoading(false);
         }
     }, [navigate]);
 
@@ -64,55 +64,49 @@ export default function AdminPage() {
     }, [loadPageStats]);
 
     return (
-        <div className='container-fluid'>
-            <div className='row min-vh-100'>
-
+        <div className="container-fluid p-0">
+            <div className="d-flex min-vh-100 overflow-hidden">
                 <Sidebar />
 
-                <div className='col bg-body-secondary p-4'>
+                <div className="flex-grow-1 p-3 p-md-4 overflow-auto custom-scrollbar" style={{ backgroundColor: "#f8fafc", height: "100vh" }}>
+                    <TopHeader />
 
-                    {/* HEADER */}
-                    <div className="d-flex justify-content-between align-items-center mb-4">
-                        <h4>Admin Management</h4>
-
-                        <div
-                            className="d-flex justify-content-center align-items-center rounded-circle bg-primary text-white"
-                            style={{
-                                width: "42px",
-                                height: "42px",
-                            }}
-                        >
-                            <span className="fw-bold">
-                                {name ? name.charAt(0).toUpperCase() : "U"}
-                            </span>
-                        </div>
+                    <div className="mb-4">
+                        <h4 className="fw-bold text-dark">Administrative Controls</h4>
+                        <p className="text-muted small">Manage administrative accounts, access levels, and platform-wide statistics.</p>
                     </div>
 
-                    {/* ✅ STATS */}
-                    <div className="row g-3 mb-4">
-
-                        {/* Notices (UNCHANGED) */}
-                        <StateCards title="Total Notices" value={noticeStats.total} bg="primary" />
-                        <StateCards title="Active Notices" value={noticeStats.active} bg="info" />
-                        <StateCards title="Inactive Notices" value={noticeStats.inactive} bg="warning" />
-
-                        {/* ✅ Only 1 Professor Card */}
-                        <StateCards title="Total Professors" value={professorStats.total} bg="success" />
-
-                        {/* ✅ Admin Card */}
-                        <StateCards title="Total Admins" value={adminStats.total} bg="dark" />
-
+                    {/* STATS */}
+                    <div className="row g-4 mb-3">
+                        <StateCards title="Total Notices" value={noticeStats.total} icon="fa-bullhorn" color="primary" />
+                        <StateCards title="Active Notices" value={noticeStats.active} icon="fa-circle-check" color="info" />
+                        <StateCards title="Inactive Notices" value={noticeStats.inactive} icon="fa-clock" color="warning" />
+                        <StateCards title="Total Professors" value={professorStats.total} icon="fa-user-tie" color="success" />
+                        <StateCards title="Total Admins" value={adminStats.total} icon="fa-user-shield" color="dark" />
                     </div>
 
                     {/* TABLE */}
-                    <div className='row'>
-                        <div className='mb-4'>
-                            <AdminList />
+                    <div className="row g-4">
+                        <div className="col-12">
+                            {loading ? (
+                                <div className="text-center py-5 bg-white rounded-4 shadow-sm">
+                                    <div className="spinner-border text-primary mb-3"></div>
+                                    <h6 className="text-muted">Loading administrative data...</h6>
+                                </div>
+                            ) : (
+                                <AdminList />
+                            )}
                         </div>
                     </div>
-
                 </div>
             </div>
+            <style>
+                {`
+                .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+                .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+                .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+                `}
+            </style>
         </div>
     )
 }

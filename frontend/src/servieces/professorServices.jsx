@@ -1,4 +1,5 @@
 import { formatDate } from "./noticeServices";
+import { buildApiUrl } from "../config/api";
 
 export const fetchProfessor = async () => {
     const token = localStorage.getItem("token")
@@ -8,7 +9,7 @@ export const fetchProfessor = async () => {
         throw error;
     }
 
-    const res = await fetch(`http://localhost:5000/admin/professors`, {
+    const res = await fetch(buildApiUrl("admin/professors"), {
         headers: {
             Authorization: `Bearer ${token}`
         }
@@ -40,7 +41,7 @@ export const deleteProfessor = async (id) => {
         error.status = 401;
         throw error;
     }
-    const res = await fetch(`http://localhost:5000/admin/professor/delete/${id}`, {
+    const res = await fetch(buildApiUrl(`admin/professor/delete/${id}`), {
         method: "DELETE",
         headers: {
             Authorization: `Bearer ${token}`,
@@ -61,7 +62,7 @@ export const deleteProfessor = async (id) => {
 export const updateProfessor = async (id, formData) => {
     const token = localStorage.getItem("token");
 
-    const res = await fetch(`http://localhost:5000/admin/professor/update/${id}`, {
+    const res = await fetch(buildApiUrl(`admin/professor/update/${id}`), {
         method: "PUT",
         headers: {
             Authorization: `Bearer ${token}`,
@@ -111,7 +112,7 @@ const normalizeProfile = (payload) => {
 
 export const getProfessorProfile = async () => {
     const headers = getAuthHeader();
-    const res = await fetch("http://localhost:5000/admin/professor/profile", { headers });
+    const res = await fetch(buildApiUrl("admin/professor/profile"), { headers });
     const data = await res.json();
 
     if (!res.ok) {
@@ -132,7 +133,7 @@ export const updateProfessorProfile = async (formData) => {
         status: formData.status || "active"
     };
 
-    const res = await fetch("http://localhost:5000/admin/professor/profile", {
+    const res = await fetch(buildApiUrl("admin/professor/profile"), {
         method: "PUT",
         headers,
         body: JSON.stringify(payload)

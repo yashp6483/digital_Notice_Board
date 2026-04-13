@@ -2,20 +2,22 @@ import React, { useEffect, useState } from "react";
 import { Modal, ModalHeader, ModalBody, ModalTitle, Form, Button } from "react-bootstrap";
 import { Department } from "../constants/categoryVariant";
 import Swal from "sweetalert2";
+import { buildApiUrl } from "../config/api";
+
+const DEFAULT_FORM = {
+    name: "Prof. ",
+    department: "Computer Engineering",
+    email: "",
+    phone: "",
+    birthdate: "",
+    password: "",
+    status: "active",
+    role: "professor"
+};
 
 export default function ProfessorAdd({ show, onClose, onSubmit, mode = "add", prof }) {
 
-    const defaultForm = {
-        name: "Prof. ",
-        department: "Computer Engineering",
-        email: "",
-        phone: "",
-        birthdate: "",
-        password: "",
-        status: "active"
-    };
-
-    const [form, setForm] = useState(defaultForm);
+    const [form, setForm] = useState(DEFAULT_FORM);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -39,7 +41,7 @@ export default function ProfessorAdd({ show, onClose, onSubmit, mode = "add", pr
                 status: prof.status === "Active" ? "active" : "inactive"
             });
         } else {
-            setForm(defaultForm);
+            setForm(DEFAULT_FORM);
         }
     }, [mode, prof, show]);
 
@@ -59,8 +61,8 @@ export default function ProfessorAdd({ show, onClose, onSubmit, mode = "add", pr
         }
 
         const url = mode === "edit"
-            ? `http://localhost:5000/admin/professor/update/${prof._id}`
-            : "http://localhost:5000/admin/professor";
+            ? buildApiUrl(`admin/professor/update/${prof._id}`)
+            : buildApiUrl("admin/professor");
 
         const method = mode === "edit" ? "PUT" : "POST";
 

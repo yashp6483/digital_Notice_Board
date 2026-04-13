@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import io from "socket.io-client";
+import { SOCKET_URL, buildApiUrl } from "../config/api";
 
-// 🔥 SOCKET CONFIG
-const socket = io("http://localhost:5000", {
+const socket = io(SOCKET_URL, {
   transports: ["websocket"],
   reconnection: true,
   reconnectionAttempts: Infinity,
@@ -13,8 +13,8 @@ const NoticeDisplay = () => {
   const [notices, setNotices] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
-  // ✅ DEFAULT SETTINGS
   const [settings, setSettings] = useState({
     slideTime: 10000,
     autoSlide: true,
@@ -24,54 +24,31 @@ const NoticeDisplay = () => {
     fontSize: "medium",
   });
 
-  // 🔥 ALWAYS SYNC SETTINGS (REAL-TIME FIX)
   useEffect(() => {
     const loadSettings = () => {
       const saved = localStorage.getItem("displaySettings");
-      if (saved) {
-        setSettings((prev) => ({
-          ...prev,
-          ...JSON.parse(saved),
-        }));
-      }
+      if (saved) setSettings((prev) => ({ ...prev, ...JSON.parse(saved) }));
     };
-
     loadSettings();
     const interval = setInterval(loadSettings, 1000);
     return () => clearInterval(interval);
   }, []);
 
-  // 🔥 FETCH NOTICES
   const fetchNotices = async () => {
     try {
-      const res = await fetch("http://localhost:5000/display/notices");
+      const res = await fetch(buildApiUrl("display/notices"));
       const data = await res.json();
       setNotices(data.notices || []);
-    } catch (err) {
-      console.error("Fetch Error:", err);
-    }
+    } catch (err) { console.error("Fetch Error:", err); }
   };
 
-  useEffect(() => {
-    fetchNotices();
-  }, []);
+  useEffect(() => { fetchNotices(); }, []);
 
-  // 🔥 SOCKET EVENTS
   useEffect(() => {
     socket.on("connect", () => console.log("✅ Connected:", socket.id));
     socket.on("reconnect", fetchNotices);
-
-    socket.on("new_notice", (newNotice) => {
-      setNotices((prev) => [newNotice, ...prev]);
-      setCurrentIndex(0);
-    });
-
-    socket.on("update_notice", (updated) => {
-      setNotices((prev) =>
-        prev.map((n) => (n._id === updated._id ? updated : n))
-      );
-    });
-
+    socket.on("new_notice", (newNotice) => { setNotices((prev) => [newNotice, ...prev]); setCurrentIndex(0); });
+    socket.on("update_notice", (updated) => setNotices((prev) => prev.map((n) => (n._id === updated._id ? updated : n))));
     socket.on("delete_notice", (id) => {
       setNotices((prev) => {
         const updated = prev.filter((n) => n._id !== id);
@@ -79,51 +56,31 @@ const NoticeDisplay = () => {
         return updated;
       });
     });
-
-    return () => {
-      socket.off("connect");
-      socket.off("reconnect");
-      socket.off("new_notice");
-      socket.off("update_notice");
-      socket.off("delete_notice");
-    };
+    return () => { socket.off("connect"); socket.off("reconnect"); socket.off("new_notice"); socket.off("update_notice"); socket.off("delete_notice"); };
   }, [currentIndex]);
 
-  // ⏱ LIVE CLOCK
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
-  // 🔁 AUTO SLIDE
   useEffect(() => {
     if (settings.autoSlide === false || notices.length <= 1) return;
     const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % notices.length);
+      setIsTransitioning(true);
+      setTimeout(() => {
+        setCurrentIndex((prev) => (prev + 1) % notices.length);
+        setIsTransitioning(false);
+      }, 500);
     }, settings.slideTime || 10000);
     return () => clearInterval(interval);
   }, [notices.length, settings.autoSlide, settings.slideTime]);
 
-  // 🔄 FALLBACK POLLING
-  useEffect(() => {
-    const interval = setInterval(fetchNotices, 30000);
-    return () => clearInterval(interval);
-  }, []);
-
-  // 🔁 AUTO REFRESH (6 HOURS)
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      window.location.reload();
-    }, 1000 * 60 * 60 * 6);
-    return () => clearTimeout(timer);
-  }, []);
-
-  // ❌ NO DATA STATE
   if (notices.length === 0) {
     return (
       <div className="vh-100 vw-100 d-flex flex-column justify-content-center align-items-center bg-dark text-white">
-        <div className="spinner-border text-warning mb-3" role="status" style={{ width: "3rem", height: "3rem" }}></div>
-        <h2 className="fw-light">Waiting for notices...</h2>
+        <div className="spinner-border text-info" style={{ width: "3rem", height: "3rem" }}></div>
+        <h2 className="mt-4 fw-light tracking-widest text-uppercase">Synchronizing Board...</h2>
       </div>
     );
   }
@@ -131,131 +88,174 @@ const NoticeDisplay = () => {
   const safeIndex = currentIndex >= notices.length ? 0 : currentIndex;
   const notice = notices[safeIndex];
   const file = notice.documentUrl || "";
-
-  // 🎯 SETTINGS APPLY
   const isImage = settings.showImages && (file.includes("/image/") || file.match(/\.(jpg|jpeg|png|gif|webp)$/i));
   const isDocument = settings.showDocuments && file && !isImage;
 
-  const fontClass =
-    settings.fontSize === "large" ? "fs-2" : settings.fontSize === "small" ? "fs-5" : "fs-4";
-
-  const sharedTime = new Date(notice.createdAt).toLocaleString("en-IN", {
-    day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit",
-  });
+  const getFontSize = () => {
+    switch (settings.fontSize) {
+      case "large": return "clamp(1.4rem, 2.2vw, 1.8rem)";
+      case "small": return "clamp(0.9rem, 1vw, 1.1rem)";
+      default: return "clamp(1.1rem, 1.4vw, 1.3rem)";
+    }
+  };
 
   return (
-    <div className="container-fluid vh-100 d-flex flex-column p-0 bg-dark text-white overflow-hidden">
+    <div className="glasmorphism-wrapper vh-100 vw-100 d-flex flex-column overflow-hidden font-sans">
       
-      {/* 🔝 HEADER */}
-      <header className="d-flex justify-content-between align-items-center px-4 py-3 bg-black border-bottom border-secondary shadow-sm">
-        <div className="d-flex align-items-center gap-2">
-          <span className="fs-3">📢</span>
-          <h3 className="fw-bold text-warning m-0">Digital Notice Board</h3>
+      {/* 🔮 ANIMATED BACKGROUND BLOBS */}
+      <div className="blob blob-1"></div>
+      <div className="blob blob-2"></div>
+      <div className="blob blob-3"></div>
+
+      {/* 🔝 GLASS HEADER */}
+      <header className="glass-header d-flex justify-content-between align-items-center px-5 py-3 z-3">
+        <div className="d-flex align-items-center gap-3">
+          <div className="glass-icon-box p-2 d-flex align-items-center justify-content-center rounded-3">
+            <span className="fs-4">📢</span>
+          </div>
+          <h2 className="fw-black text-white text-uppercase m-0 tracking-tighter" style={{ fontSize: "1.4rem" }}>
+            Digital <span className="text-info">Notice Board</span>
+          </h2>
         </div>
-        <h5 className="text-info m-0 fw-light border border-info rounded-pill px-4 py-2 bg-info bg-opacity-10">
-          🕒 {currentTime.toLocaleString()}
-        </h5>
+        
+        <div className="glass-clock text-end px-4 py-2 rounded-4">
+          <div className="text-white fw-bold fs-3 lh-1" style={{ fontFamily: "monospace" }}>
+            {currentTime.toLocaleTimeString("en-IN", { hour12: true })}
+          </div>
+          <div className="text-white opacity-70 small text-uppercase tracking-widest mt-1" style={{ fontSize: "0.6rem" }}>
+            {currentTime.toLocaleDateString("en-IN", { weekday: 'long', day: 'numeric', month: 'short' })}
+          </div>
+        </div>
       </header>
 
-      {/* 📺 MAIN DISPLAY AREA */}
-      <main className="flex-grow-1 d-flex justify-content-center align-items-center p-3 p-md-4 overflow-hidden">
-        <div className="card bg-secondary bg-opacity-10 border border-secondary shadow-lg rounded-4 w-100 h-100 overflow-hidden">
-          <div className="row g-0 h-100">
+      {/* 📺 MAIN GLASS CONTAINER */}
+      <main className="flex-grow-1 p-4 overflow-hidden position-relative z-2">
+        <div className={`glass-card h-100 w-100 rounded-5 border border-white border-opacity-20 shadow-lg overflow-hidden transition-all duration-500 ${isTransitioning ? 'opacity-0 scale-98 blur-sm' : 'opacity-100 scale-100'}`}>
+          <div className="row g-0 h-100 overflow-hidden">
             
-            {/* 📝 TEXT CONTENT SECTION */}
-            <div className={`${isImage ? "col-lg-6 border-end border-secondary" : "col-12"} d-flex flex-column h-100 p-4 p-md-5 overflow-auto custom-scrollbar`}>
-              
-              <div className="mb-auto">
-                <span className="badge bg-warning text-dark px-3 py-2 fs-6 rounded-pill mb-4 shadow-sm">
-                  {notice.category || "General Announcement"}
+            <div className={`${isImage ? "col-lg-7" : "col-12"} h-100 d-flex flex-column p-5 overflow-hidden`}>
+              <div className="mb-3">
+                <span className="glass-badge px-3 py-2 fw-bold text-uppercase text-white" style={{ fontSize: "0.7rem" }}>
+                  {notice.category || "General"}
                 </span>
-                <h1 className="fw-bolder text-white display-5 mb-4 lh-base">
-                  {notice.title}
-                </h1>
-                <p className={`${fontClass} text-light opacity-75 lh-lg`}>
-                  {notice.description}
-                </p>
               </div>
 
-              {/* 📄 DOCUMENT LINK (Now shows raw URL text) */}
-              {isDocument && (
-                <div className="mt-4 p-4 bg-dark bg-opacity-50 rounded-4 border border-secondary text-center">
-                  <h5 className="text-light mb-2">📄 Attached Document</h5>
-                  <a
-                    href={file}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-info text-decoration-underline fs-5 d-block"
-                    style={{ wordBreak: "break-all" }}
-                  >
-                    {file}
-                  </a>
+              <div className="flex-grow-1 overflow-hidden d-flex flex-column">
+                <h1 className="fw-black mb-3 text-white lh-1-2" style={{ fontSize: "clamp(2rem, 4vw, 3.5rem)" }}>
+                  {notice.title}
+                </h1>
+                <div className="glass-line mb-4"></div>
+                
+                <div className="notice-description-container overflow-hidden">
+                  <p className="text-white opacity-90 fw-normal m-0" style={{ fontSize: getFontSize(), lineHeight: "1.6" }}>
+                    {notice.description}
+                  </p>
                 </div>
-              )}
 
-              {/* Notice Metadata Footer */}
-              <div className="mt-4 pt-3 border-top border-secondary border-opacity-50">
-                <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                  <div className="text-info">
-                    <span className="fs-5">🕒 Posted: {sharedTime}</span>
+                {isDocument && (
+                  <div className="mt-4 pt-3 border-top border-white border-opacity-10">
+                    <div className="small text-white opacity-50 text-uppercase fw-bold mb-1" style={{ fontSize: "0.6rem", letterSpacing: "1px" }}>Reference Document</div>
+                    <div className="text-info text-break fw-bold" style={{ fontSize: "0.85rem", wordBreak: "break-all" }}>
+                      {file}
+                    </div>
                   </div>
-                  <div className="text-success">
-                    <span className="fs-5 fw-bold">👤 {notice.createdBy?.name || "System Admin"}</span>
-                  </div>
+                )}
+              </div>
+
+              <div className="mt-auto pt-4 border-top border-white border-opacity-10 d-flex justify-content-between align-items-center">
+                <div className="d-flex align-items-center gap-2">
+                  <span className="text-white opacity-50 small text-uppercase fw-bold" style={{ fontSize: "0.6rem" }}>Posted On</span>
+                  <span className="text-white fw-medium ms-1" style={{ fontSize: "0.85rem" }}>{new Date(notice.createdAt).toLocaleDateString()}</span>
+                </div>
+                <div className="d-flex align-items-center gap-2">
+                  <span className="text-white opacity-50 small text-uppercase fw-bold" style={{ fontSize: "0.6rem" }}>Published By</span>
+                  <span className="text-info fw-bold ms-1" style={{ fontSize: "0.85rem" }}>{notice.createdBy?.name || "System"}</span>
                 </div>
               </div>
             </div>
 
-            {/* 🖼 IMAGE SECTION */}
             {isImage && (
-              <div className="col-lg-6 h-100 d-flex justify-content-center align-items-center bg-black bg-opacity-50 p-3">
-                <img
-                  src={file}
-                  alt="Notice Attachment"
-                  className="img-fluid rounded-3 shadow"
-                  style={{ maxHeight: "100%", maxWidth: "100%", objectFit: "contain" }}
-                />
+              <div className="col-lg-5 h-100 d-flex align-items-center justify-content-center p-3 overflow-hidden">
+                <div className="glass-image-container h-100 w-100 rounded-4 overflow-hidden d-flex align-items-center justify-content-center">
+                  <img src={file} alt="Notice" className="img-fluid" style={{ maxHeight: "100%", maxWidth: "100%", objectFit: "contain" }} />
+                </div>
               </div>
             )}
-
           </div>
         </div>
       </main>
 
-      {/* 🔻 FOOTER TICKER */}
+      {/* 🔻 GLASS TICKER */}
       {settings.ticker && (
-        <footer className="bg-black py-2 border-top border-secondary overflow-hidden">
-          <div className="ticker-wrapper d-flex align-items-center">
-            <div className="ticker-text d-flex gap-5 px-4 text-warning fs-5 fw-medium">
-              <span>🔔 {notice.title} - {notice.description}</span>
-              <span>🔔 {notice.title} - {notice.description}</span>
+        <footer className="glass-footer py-2 overflow-hidden z-3" style={{ height: "50px" }}>
+          <div className="ticker-wrapper-glass">
+            <div className="ticker-content-glass d-flex gap-5 px-4 align-items-center h-100">
+              {notices.concat(notices).map((n, idx) => (
+                <div key={`${n._id}-${idx}`} className="d-flex align-items-center gap-3 text-white fw-bold text-uppercase" style={{ whiteSpace: "nowrap", fontSize: "0.8rem" }}>
+                  <span className="text-info">◆</span>
+                  <span>{n.title}</span>
+                  <span className="opacity-30">|</span>
+                </div>
+              ))}
             </div>
           </div>
         </footer>
       )}
 
-      {/* CSS For Ticker & Scrollbar Hiding */}
       <style>
         {`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 6px;
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;700;800&display=swap');
+        .font-sans { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .fw-black { font-weight: 800; }
+        .tracking-tighter { letter-spacing: -0.04em; }
+        .no-scroll { scrollbar-width: none !important; }
+        .no-scroll::-webkit-scrollbar { display: none !important; }
+
+        .glasmorphism-wrapper {
+          background-color: #0f172a;
+          background-image: radial-gradient(at 0% 0%, rgba(30, 64, 175, 0.3) 0, transparent 50%), 
+                            radial-gradient(at 50% 0%, rgba(139, 92, 246, 0.3) 0, transparent 50%),
+                            radial-gradient(at 100% 0%, rgba(30, 64, 175, 0.3) 0, transparent 50%);
+          position: relative;
         }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: rgba(255, 255, 255, 0.2);
-          border-radius: 10px;
+
+        .blob {
+          position: absolute;
+          border-radius: 50%;
+          filter: blur(80px);
+          z-index: 1;
+          opacity: 0.6;
+          animation: blob-float 20s infinite alternate;
         }
-        .ticker-wrapper {
-          width: 100%;
-          overflow: hidden;
-          white-space: nowrap;
+        .blob-1 { width: 400px; height: 400px; background: #3b82f6; top: -100px; left: -100px; }
+        .blob-2 { width: 500px; height: 500px; background: #8b5cf6; bottom: -100px; right: -100px; animation-delay: -5s; }
+        .blob-3 { width: 300px; height: 300px; background: #06b6d4; top: 40%; left: 30%; animation-delay: -10s; }
+
+        @keyframes blob-float {
+          0% { transform: translate(0, 0) scale(1); }
+          100% { transform: translate(50px, 100px) scale(1.2); }
         }
-        .ticker-text {
-          display: inline-block;
-          animation: ticker 25s linear infinite;
+
+        .glass-header, .glass-card, .glass-footer, .glass-clock, .glass-badge, .glass-icon-box {
+          background: rgba(255, 255, 255, 0.05);
+          backdrop-filter: blur(12px) saturate(180%);
+          -webkit-backdrop-filter: blur(12px) saturate(180%);
+          border: 1px solid rgba(255, 255, 255, 0.1);
         }
-        @keyframes ticker {
-          0% { transform: translateX(100vw); }
-          100% { transform: translateX(-100%); }
+
+        .glass-badge { border-radius: 100px; background: rgba(255, 255, 255, 0.1); }
+        .glass-line { height: 4px; width: 60px; background: #06b6d4; border-radius: 2px; box-shadow: 0 0 15px rgba(6, 182, 212, 0.5); }
+        .scale-98 { transform: scale(0.98); }
+        .blur-sm { filter: blur(4px); }
+
+        .ticker-wrapper-glass { width: 100%; overflow: hidden; }
+        .ticker-content-glass {
+          display: inline-flex;
+          animation: ticker-glass 50s linear infinite;
+        }
+        @keyframes ticker-glass {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
         }
         `}
       </style>

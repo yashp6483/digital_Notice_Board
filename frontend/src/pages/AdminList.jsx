@@ -2,12 +2,10 @@ import React, { useCallback, useEffect, useState } from "react";
 import { Card, Table, Badge, Button } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
-
 import AdminAdd from "../components/AdminAdd";
 import { fetchAdmins, deleteAdmin, mapAdminForTable } from "../servieces/adminServices";
 
 export default function AdminList() {
-
     const navigate = useNavigate();
 
     const [admins, setAdmins] = useState([]);
@@ -15,7 +13,6 @@ export default function AdminList() {
     const [editAdmin, setEditAdmin] = useState(null);
     const [showAddModal, setShowAddModal] = useState(false);
 
-    // ✅ Fetch Admins
     const loadAdmins = useCallback(async () => {
         setLoading(true);
         try {
@@ -24,31 +21,29 @@ export default function AdminList() {
             setAdmins(list);
         } catch (error) {
             console.error(error);
-
             if (error.status === 401 || error.status === 403) {
                 localStorage.clear();
                 navigate("/unauthorized");
                 return;
             }
-
             Swal.fire({
                 icon: "error",
                 title: "Failed to load admins",
                 text: error.message || "Something went wrong"
             });
-
         } finally {
             setLoading(false);
         }
     }, [navigate]);
 
-    // ✅ Delete Admin
     const handleDelete = async (id) => {
         const result = await Swal.fire({
             title: "Delete this admin?",
             text: "This action cannot be undone.",
             icon: "warning",
             showCancelButton: true,
+            confirmButtonColor: "#ef4444",
+            cancelButtonColor: "#858796",
             confirmButtonText: "Yes, delete"
         });
 
@@ -56,24 +51,19 @@ export default function AdminList() {
 
         try {
             await deleteAdmin(id);
-
             setAdmins((prev) => prev.filter((a) => a._id !== id));
-
             Swal.fire({
                 icon: "success",
                 title: "Admin deleted",
                 timer: 1200,
                 showConfirmButton: false
             });
-
         } catch (error) {
-
             if (error.status === 401 || error.status === 403) {
                 localStorage.clear();
                 navigate("/unauthorized");
                 return;
             }
-
             Swal.fire({
                 icon: "error",
                 title: "Delete failed",
@@ -87,111 +77,111 @@ export default function AdminList() {
     }, [loadAdmins]);
 
     return (
-        <Card className="shadow-sm h-100">
-            <Card.Body>
-
+        <Card className="border-0 shadow-sm rounded-4 overflow-hidden">
+            <Card.Body className="p-4">
                 {/* Header */}
-                <div className="d-flex justify-content-between align-items-center mb-3">
-                    <Card.Title className="mb-0">Admin List</Card.Title>
-
-                    <Button onClick={() => setShowAddModal(true)}>
-                        + Add Admin
+                <div className="d-flex justify-content-between align-items-center mb-4">
+                    <h5 className="mb-0 fw-bold text-dark">Administrative Accounts</h5>
+                    <Button 
+                        onClick={() => setShowAddModal(true)}
+                        className="btn-primary rounded-3 px-3 py-2 fw-bold shadow-sm"
+                    >
+                        <i className="fa-solid fa-user-plus me-2"></i> Add Admin
                     </Button>
                 </div>
 
                 {/* Table */}
                 <div className="table-responsive">
-                    <Table className="text-center align-middle mb-0">
-
-                        <thead className="table-light">
-                            <tr>
-                                <th>No.</th>
-                                <th>Name</th>
-                                <th>Email</th>
-                                <th>Role</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
+                    <Table hover className="align-middle mb-0">
+                        <thead>
+                          <tr className="bg-light bg-opacity-50">
+                            <th className="border-0 py-3 text-muted small text-uppercase fw-bold ps-3">Administrator</th>
+                            <th className="border-0 py-3 text-muted small text-uppercase fw-bold text-center">Role</th>
+                            <th className="border-0 py-3 text-muted small text-uppercase fw-bold text-center">Status</th>
+                            <th className="border-0 py-3 text-muted small text-uppercase fw-bold text-center pe-3">Actions</th>
+                          </tr>
                         </thead>
 
                         <tbody>
-
-                            {loading && (
+                            {loading ? (
                                 <tr>
-                                    <td colSpan={6} className="text-center text-muted">
-                                        Loading admins...
+                                    <td colSpan={4} className="text-center py-5">
+                                        <div className="spinner-border spinner-border-sm text-primary me-2"></div>
+                                        <span className="text-muted">Loading admins...</span>
                                     </td>
                                 </tr>
-                            )}
-
-                            {!loading && admins.length === 0 && (
+                            ) : admins.length === 0 ? (
                                 <tr>
-                                    <td colSpan={6} className="text-center text-muted">
-                                        No admins found
+                                    <td colSpan={4} className="text-center py-5 text-muted">
+                                        No administrative accounts found.
                                     </td>
                                 </tr>
+                            ) : (
+                                admins.map((admin, index) => (
+                                    <tr key={admin._id} className="border-bottom border-light">
+                                        <td className="py-3 ps-3">
+                                            <div className="d-flex align-items-center gap-3">
+                                                <div className="bg-dark bg-opacity-10 text-dark rounded-circle d-flex align-items-center justify-content-center fw-bold" style={{ width: "36px", height: "36px", minWidth: "36px", fontSize: '0.8rem' }}>
+                                                    {admin.name?.charAt(0).toUpperCase()}
+                                                </div>
+                                                <div>
+                                                    <div className="fw-bold text-dark">{admin.name}</div>
+                                                    <div className="text-muted small">{admin.email}</div>
+                                                </div>
+                                            </div>
+                                        </td>
+
+                                        <td className="text-center py-3">
+                                            <Badge 
+                                                bg={admin.role === "superadmin" ? "dark" : "secondary"}
+                                                className="rounded-pill px-3 py-2 fw-semibold shadow-sm text-uppercase"
+                                                style={{ fontSize: '0.65rem' }}
+                                            >
+                                                {admin.role}
+                                            </Badge>
+                                        </td>
+
+                                        <td className="text-center py-3">
+                                            <Badge 
+                                                bg={admin.status === "Active" ? "success" : "warning"}
+                                                className="rounded-pill px-3 py-2 fw-semibold shadow-sm"
+                                                style={{ fontSize: '0.7rem' }}
+                                            >
+                                                {admin.status}
+                                            </Badge>
+                                        </td>
+
+                                        <td className="text-center py-3 pe-3">
+                                            <div className="d-flex justify-content-center gap-2">
+                                                <Button
+                                                    size="sm"
+                                                    variant="light"
+                                                    className="text-primary p-2 border-0 rounded-3 shadow-sm"
+                                                    onClick={() => {
+                                                        setEditAdmin(admin);
+                                                        setShowAddModal(true);
+                                                    }}
+                                                >
+                                                    <i className="fa-solid fa-user-pen"></i>
+                                                </Button>
+
+                                                <Button
+                                                    size="sm"
+                                                    variant="light"
+                                                    className="text-danger p-2 border-0 rounded-3 shadow-sm"
+                                                    onClick={() => handleDelete(admin._id)}
+                                                >
+                                                    <i className="fa-solid fa-trash-can"></i>
+                                                </Button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
                             )}
-
-                            {!loading && admins.map((admin, index) => (
-                                <tr key={admin._id}>
-                                    <td>{index + 1}</td>
-
-                                    <td className="text-start">
-                                        <div className="fw-semibold text-truncate" style={{ maxWidth: "180px" }}>
-                                            {admin.name}
-                                        </div>
-                                    </td>
-
-                                    <td className="text-truncate" style={{ maxWidth: "200px" }}>
-                                        {admin.email}
-                                    </td>
-
-                                    <td>
-                                        <Badge bg={admin.role === "superadmin" ? "primary" : "secondary"}>
-                                            {admin.role}
-                                        </Badge>
-                                    </td>
-
-                                    <td>
-                                        <Badge bg={admin.status === "Active" ? "success" : "warning"}>
-                                            {admin.status}
-                                        </Badge>
-                                    </td>
-
-                                    <td>
-                                        <div className="d-flex justify-content-center gap-2">
-
-                                            <Button
-                                                size="sm"
-                                                className="rounded-circle d-flex align-items-center justify-content-center"
-                                                style={{ width: "35px", height: "35px" }}
-                                                variant="outline-primary"
-                                                onClick={() => {
-                                                    setEditAdmin(admin);
-                                                    setShowAddModal(true);
-                                                }}
-                                            >
-                                                <i className="fas fa-edit"></i>
-                                            </Button>
-
-                                            <Button
-                                                size="sm"
-                                                className="rounded-circle d-flex align-items-center justify-content-center"
-                                                style={{ width: "35px", height: "35px" }}
-                                                variant="outline-danger"
-                                                onClick={() => handleDelete(admin._id)}
-                                            >
-                                                <i className="fas fa-trash"></i>
-                                            </Button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
                         </tbody>
                     </Table>
                 </div>
 
-                {/* Modal */}
                 <AdminAdd
                     show={showAddModal}
                     onClose={() => {
@@ -202,7 +192,6 @@ export default function AdminList() {
                     mode={editAdmin ? "edit" : "add"}
                     admin={editAdmin}
                 />
-
             </Card.Body>
         </Card>
     );

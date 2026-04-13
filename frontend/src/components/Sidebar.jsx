@@ -9,7 +9,6 @@ export default function Sidebar() {
   const role = localStorage.getItem("role");
   const basePath = role === "admin" ? "/admin" : "/professor";
 
-  // ✅ ACTIVE ROUTE CHECK (FIXED)
   const isActive = (path, exact = false) => {
     if (exact) {
       return location.pathname === path;
@@ -19,226 +18,138 @@ export default function Sidebar() {
 
   const logout = () => {
     Swal.fire({
-      title: "Are you sure?",
-      text: "You will be logged out of your account",
-      icon: "warning",
+      title: "Logout?",
+      text: "Are you sure you want to sign out?",
+      icon: "question",
       showCancelButton: true,
-      confirmButtonColor: "#d33",
-      cancelButtonColor: "#3085d6",
+      confirmButtonColor: "#4e73df",
+      cancelButtonColor: "#858796",
       confirmButtonText: "Yes, Logout",
-      cancelButtonText: "Cancel",
     }).then((result) => {
       if (result.isConfirmed) {
         localStorage.clear();
-
         Swal.fire({
           icon: "success",
           title: "Logged Out",
-          text: "You have been successfully logged out",
-          timer: 1200,
+          timer: 1000,
           showConfirmButton: false,
         });
-
         setTimeout(() => {
           window.location.href = "/login";
-        }, 1200);
+        }, 1000);
       }
     });
   };
 
-  const toggleSidebar = () => {
-    setIsCollapsed((prev) => !prev);
-  };
-
   return (
     <div
-      className="d-flex flex-column min-vh-100 bg-primary text-white p-2 p-md-3 flex-shrink-0"
+      className="d-flex flex-column min-vh-100 text-white flex-shrink-0"
       style={{
-        width: isCollapsed ? "84px" : "260px",
-        transition: "width 0.2s ease",
+        width: isCollapsed ? "84px" : "280px",
+        transition: "width 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+        background: "linear-gradient(180deg, #1e293b 0%, #0f172a 100%)",
+        boxShadow: "4px 0 15px rgba(0,0,0,0.1)",
+        zIndex: 1000,
+        position: "sticky",
+        top: 0,
+        height: "100vh"
       }}
     >
-      {/* 🔽 TOGGLE */}
-      <div
-        className={`d-flex mb-3 ${isCollapsed ? "justify-content-center" : "justify-content-end"
-          }`}
-      >
+      {/* HEADER / TOGGLE */}
+      <div className="p-4 d-flex align-items-center justify-content-between">
+        {!isCollapsed && (
+          <div className="d-flex align-items-center gap-2">
+            <div className="bg-primary p-2 rounded-3 shadow-sm">
+                <i className="fa-solid fa-bullhorn fs-5 text-white"></i>
+            </div>
+            <span className="fw-bold fs-5 tracking-tight">DNB Portal</span>
+          </div>
+        )}
         <button
-          onClick={toggleSidebar}
-          className="btn btn-sm btn-outline-light"
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          className="btn btn-sm text-white-50 border-0 hover-text-white"
         >
-          <i
-            className={`fa-solid ${isCollapsed ? "fa-bars" : "fa-angle-left"
-              }`}
-          ></i>
+          <i className={`fa-solid ${isCollapsed ? "fa-bars fs-4" : "fa-indent fs-5"}`}></i>
         </button>
       </div>
 
-      {/* 🔷 LOGO */}
-      <div
-        className={`d-flex align-items-center mb-4 ${isCollapsed ? "justify-content-center" : ""
-          }`}
-      >
-        <i
-          className={`fa-solid fa-trophy fs-4 ${isCollapsed ? "" : "me-2"
-            }`}
-        ></i>
-        {!isCollapsed && (
-          <span className="fw-bold fs-5">
-            Digital Notice Board
-          </span>
-        )}
+      {/* MENU */}
+      <div className="px-3 py-2 flex-grow-1 overflow-auto custom-scrollbar">
+        {!isCollapsed && <small className="text-white-50 text-uppercase fw-bold x-small mb-3 d-block px-2">Main Menu</small>}
+        <ul className="nav nav-pills flex-column gap-1">
+          <MenuLink to={basePath} icon="fa-house" label="Dashboard" isCollapsed={isCollapsed} active={isActive(basePath, true)} />
+          <MenuLink to={`${basePath}/notices`} icon="fa-bullhorn" label="Notices" isCollapsed={isCollapsed} active={isActive(`${basePath}/notices`)} />
+          <MenuLink to={`${basePath}/my-notices`} icon="fa-bookmark" label="My Notices" isCollapsed={isCollapsed} active={isActive(`${basePath}/my-notices`)} />
+          
+          {role === "admin" && (
+            <>
+              {!isCollapsed && <small className="text-white-50 text-uppercase fw-bold x-small mt-4 mb-3 d-block px-2">Management</small>}
+              <MenuLink to="/admin/professors" icon="fa-user-tie" label="Professors" isCollapsed={isCollapsed} active={isActive("/admin/professors")} />
+              <MenuLink to={`${basePath}/admins`} icon="fa-user-shield" label="Admins" isCollapsed={isCollapsed} active={isActive(`${basePath}/admins`)} />
+            </>
+          )}
+
+          {!isCollapsed && <small className="text-white-50 text-uppercase fw-bold x-small mt-4 mb-3 d-block px-2">Settings</small>}
+          <MenuLink to={`${basePath}/profile`} icon="fa-id-card" label="My Profile" isCollapsed={isCollapsed} active={isActive(`${basePath}/profile`)} />
+          <MenuLink to={`${basePath}/display`} icon="fa-display" label="Display" isCollapsed={isCollapsed} active={isActive(`${basePath}/display`)} />
+        </ul>
       </div>
 
-      {/* 🔗 MENU */}
-      <ul className="nav nav-pills flex-column gap-2">
-
-        {/* ✅ Dashboard (EXACT MATCH FIX) */}
-        <li className="nav-item">
-          <Link
-            to={basePath}
-            className={`nav-link d-flex align-items-center px-3 ${isCollapsed ? "justify-content-center" : ""
-              } ${isActive(basePath, true)
-                ? "bg-dark text-white"
-                : "text-white"
-              }`}
-          >
-            <i className={`fa-solid fa-house ${isCollapsed ? "" : "me-2"}`}></i>
-            {!isCollapsed && <span>Dashboard</span>}
-          </Link>
-        </li>
-
-        {/* Notices */}
-        <li className="nav-item">
-          <Link
-            to={`${basePath}/notices`}
-            className={`nav-link d-flex align-items-center px-3 ${isCollapsed ? "justify-content-center" : ""
-              } ${isActive(`${basePath}/notices`)
-                ? "bg-dark text-white"
-                : "text-white"
-              }`}
-          >
-            <i className={`fa-solid fa-bullhorn ${isCollapsed ? "" : "me-2"}`}></i>
-            {!isCollapsed && <span>Notices</span>}
-          </Link>
-        </li>
-
-        {/* My Notices */}
-        <li className="nav-item">
-          <Link
-            to={`${basePath}/my-notices`}
-            className={`nav-link d-flex align-items-center px-3 ${isCollapsed ? "justify-content-center" : ""
-              } ${isActive(`${basePath}/my-notices`)
-                ? "bg-dark text-white"
-                : "text-white"
-              }`}
-          >
-            <i className={`fa-solid fa-bell ${isCollapsed ? "" : "me-2"}`}></i>
-            {!isCollapsed && <span>My Notices</span>}
-          </Link>
-        </li>
-
-        {/* Professors (Admin only) */}
-        {role === "admin" && (
-          <li className="nav-item">
-            <Link
-              to="/admin/professors"
-              className={`nav-link d-flex align-items-center px-3 ${isCollapsed ? "justify-content-center" : ""
-                } ${isActive("/admin/professors")
-                  ? "bg-dark text-white"
-                  : "text-white"
-                }`}
-            >
-              <i className={`fa-solid fa-user-tie ${isCollapsed ? "" : "me-2"}`}></i>
-              {!isCollapsed && <span>Professors</span>}
-            </Link>
-          </li>
-        )}
-        {role === "admin" && (
-          <li className="nav-item">
-            <Link
-              to={`${basePath}/admins`}
-              className={`nav-link d-flex align-items-center px-3 ${isCollapsed ? "justify-content-center" : ""
-                } ${isActive(`${basePath}/admins`)
-                  ? "bg-dark text-white"
-                  : "text-white"
-                }`}
-            >
-              <i className={`fa-solid fa-user-plus ${isCollapsed ? "" : "me-2"}`}></i>
-              {!isCollapsed && <span>Admin Controls</span>}
-            </Link>
-          </li>
-        )}
-        <li className="nav-item">
-          <Link
-            to={`${basePath}/profile`}
-            className={`nav-link d-flex align-items-center px-3 ${isCollapsed ? "justify-content-center" : ""
-              } ${isActive(`${basePath}/profile`)
-                ? "bg-dark text-white"
-                : "text-white"
-              }`}
-          >
-            <i className={`fa-solid fa-id-card ${isCollapsed ? "" : "me-2"}`}></i>
-            {!isCollapsed && <span>My Profile</span>}
-          </Link>
-        </li>
-        {/* Display Controls */}
-        <li className="nav-item">
-          <Link
-            to={`${basePath}/display`}
-            className={`nav-link d-flex align-items-center px-3 ${isCollapsed ? "justify-content-center" : ""
-              } ${isActive(`${basePath}/display`)
-                ? "bg-dark text-white"
-                : "text-white"
-              }`}
-          >
-            <i className={`fa-solid fa-display ${isCollapsed ? "" : "me-2"}`}></i>
-            {!isCollapsed && <span>Display Controls</span>}
-          </Link>
-        </li>
-
-      </ul>
-
-      {/* 👤 PROFILE */}
-      <div className="mt-auto">
-        <hr className="border-light" />
-
-        <div
-          className={`d-flex align-items-center gap-2 ${isCollapsed ? "justify-content-center" : ""
-            }`}
-        >
-          <i className="fa-solid fa-circle-user fs-3"></i>
-
+      {/* FOOTER PROFILE */}
+      <div className="p-3 mt-auto bg-black bg-opacity-25">
+        <div className={`d-flex align-items-center ${isCollapsed ? "justify-content-center" : "gap-3"}`}>
+          <div className="bg-primary rounded-circle d-flex align-items-center justify-content-center shadow-sm" style={{ width: "40px", height: "40px", minWidth: "40px" }}>
+            <span className="fw-bold">{localStorage.getItem("name")?.charAt(0).toUpperCase()}</span>
+          </div>
           {!isCollapsed && (
-            <div>
-              <div className="fw-semibold">
-                {localStorage.getItem("name")}
-              </div>
-
-              <button
-                onClick={logout}
-                className="btn btn-sm btn-light mt-1"
-              >
-                Logout
-              </button>
+            <div className="flex-grow-1 overflow-hidden">
+              <div className="fw-semibold text-truncate small">{localStorage.getItem("name")}</div>
+              <div className="text-white-50 x-small text-uppercase tracking-wider">{role}</div>
             </div>
           )}
+          {!isCollapsed && (
+            <button onClick={logout} className="btn btn-sm text-white-50 hover-text-danger p-0">
+              <i className="fa-solid fa-right-from-bracket"></i>
+            </button>
+          )}
         </div>
+        {isCollapsed && (
+            <button onClick={logout} className="btn btn-sm text-white-50 hover-text-danger w-100 mt-2">
+                <i className="fa-solid fa-right-from-bracket"></i>
+            </button>
+        )}
       </div>
 
-      {/* 🎨 STYLE */}
       <style>
         {`
-        .nav-link {
-          transition: all 0.2s ease;
-          border-radius: 8px;
-        }
-
-        .nav-link:hover {
-          background-color: rgba(0,0,0,0.2);
-        }
+        .hover-text-white:hover { color: white !important; }
+        .hover-text-danger:hover { color: #ef4444 !important; }
+        .x-small { font-size: 0.7rem; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+        .tracking-tight { letter-spacing: -0.02em; }
         `}
       </style>
     </div>
+  );
+}
+
+function MenuLink({ to, icon, label, isCollapsed, active }) {
+  return (
+    <li className="nav-item">
+      <Link
+        to={to}
+        className={`nav-link d-flex align-items-center py-2 px-3 rounded-3 transition-all ${
+          active ? "bg-primary text-white shadow-sm" : "text-white-50 hover-bg-white-10 hover-text-white"
+        } ${isCollapsed ? "justify-content-center" : ""}`}
+      >
+        <i className={`fa-solid ${icon} ${isCollapsed ? "fs-5" : "me-3"}`}></i>
+        {!isCollapsed && <span className="fw-medium">{label}</span>}
+      </Link>
+      <style>{`
+        .hover-bg-white-10:hover { background-color: rgba(255,255,255,0.08); }
+        .transition-all { transition: all 0.2s ease; }
+      `}</style>
+    </li>
   );
 }

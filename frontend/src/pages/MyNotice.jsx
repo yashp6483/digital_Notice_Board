@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
+import TopHeader from "../components/Topheader";
 import StateCards from "../components/StateCards";
 import NoticeTable from "../components/NoticeTable";
 import Swal from "sweetalert2";
@@ -13,14 +14,14 @@ import { fetchMyNotice } from "../servieces/noticeServices";
 export default function MyNotice() {
     const navigate = useNavigate();
 
-    const name = localStorage.getItem("name");
-
     const [notices, setNotices] = useState([]);
+    const [loading, setLoading] = useState(false);
     const [noticeStats, setNoticeStats] = useState(
         getInitialNoticeStats()
     );
 
     const loadPageStats = useCallback(async () => {
+        setLoading(true);
         try {
             const noticesFromApi = await fetchMyNotice();
             const normalized = noticesFromApi || [];
@@ -44,6 +45,8 @@ export default function MyNotice() {
                 title: "Failed to load notices",
                 text: error.message,
             });
+        } finally {
+            setLoading(false);
         }
     }, [navigate]);
 
@@ -52,54 +55,60 @@ export default function MyNotice() {
     }, [loadPageStats]);
 
     return (
-        <div className="container-fluid">
-            <div className="row min-vh-100">
+        <div className="container-fluid p-0">
+            <div className="d-flex min-vh-100 overflow-hidden">
                 <Sidebar />
 
-                <div className="col bg-body-secondary">
-                    <div className="align-items-center mb-3">
-                        <div className="rounded d-flex justify-content-between align-items-center mt-4">
-                            <div>
-                                <h4>My Notice</h4>
-                            </div>
-                            <div
-                                className="d-flex justify-content-center align-items-center rounded-circle bg-primary text-white"
-                                style={{
-                                    width: "42px",
-                                    height: "42px",
-                                    cursor: "pointer",
-                                }}
-                            >
-                                <span className="fw-bold">
-                                    {name
-                                        ? name.charAt(0).toUpperCase()
-                                        : "U"}
-                                </span>
-                            </div>
-                        </div>
+                <div className="flex-grow-1 p-3 p-md-4 overflow-auto custom-scrollbar" style={{ backgroundColor: "#f8fafc", height: "100vh" }}>
+                    <TopHeader />
+
+                    <div className="mb-4">
+                        <h4 className="fw-bold text-dark">My Personal Notices</h4>
+                        <p className="text-muted small">View and manage the notices you have specifically published.</p>
                     </div>
-                    <div className="row g-3 mb-4">
+
+                    <div className="row g-4 mb-3">
                         <StateCards
-                            title="Total Notices"
+                            title="My Total Notices"
                             value={noticeStats.total}
-                            bg="primary"
+                            icon="fa-bullhorn"
+                            color="primary"
                         />
                         <StateCards
-                            title="Active Notices"
+                            title="My Active Notices"
                             value={noticeStats.active}
-                            bg="info"
+                            icon="fa-circle-check"
+                            color="info"
                         />
                         <StateCards
-                            title="Inactive Notices"
+                            title="My Inactive Notices"
                             value={noticeStats.inactive}
-                            bg="warning"
+                            icon="fa-clock"
+                            color="warning"
                         />
                     </div>
 
-                    {/* ✅ PASS NOTICES */}
-                    <NoticeTable notices={notices} />
+                    <div className="row g-4">
+                        <div className="col-12">
+                            {loading ? (
+                                <div className="text-center py-5 bg-white rounded-4 shadow-sm">
+                                    <div className="spinner-border text-primary mb-3"></div>
+                                    <h6 className="text-muted">Loading your notices...</h6>
+                                </div>
+                            ) : (
+                                <NoticeTable notices={notices} />
+                            )}
+                        </div>
+                    </div>
                 </div>
             </div>
+            <style>
+                {`
+                .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+                .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+                .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+                `}
+            </style>
         </div>
     );
 }

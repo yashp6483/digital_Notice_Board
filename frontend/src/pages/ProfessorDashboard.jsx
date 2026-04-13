@@ -35,10 +35,7 @@ export default function ProfessorDashboard() {
         )
         .slice(0, 5);
 
-      // ✅ SET LIMITED DATA FOR TABLE
       setNotices(latestFive);
-
-      // ✅ SET FULL DATA FOR STATS
       setNoticeStats(
         calculateNoticeStats(normalizedNotices)
       );
@@ -66,102 +63,102 @@ export default function ProfessorDashboard() {
   }, [loadPageStats]);
 
   return (
-    <div className="container-fluid">
-      <div className="row min-vh-100">
+    <div className="container-fluid p-0">
+      <div className="d-flex min-vh-100 overflow-hidden">
 
-        {/* Sidebar */}
         <Sidebar />
 
         {/* Main Content */}
-        <div className="col p-4 bg-body-secondary">
+        <div className="flex-grow-1 p-3 p-md-4 overflow-auto custom-scrollbar" style={{ backgroundColor: "#f8fafc", height: "100vh" }}>
 
-          {/* Header */}
           <TopHeader />
 
           {/* Stats */}
-          <div className="row g-3 mb-4 mt-3">
+          <div className="row g-4 mb-3">
             <StateCards
               title="Total Notices"
               value={noticeStats.total}
-              bg="primary"
+              icon="fa-bullhorn"
+              color="primary"
             />
             <StateCards
               title="Active Notices"
               value={noticeStats.active}
-              bg="info"
+              icon="fa-circle-check"
+              color="info"
             />
             <StateCards
               title="Inactive Notices"
               value={noticeStats.inactive}
-              bg="warning"
+              icon="fa-clock"
+              color="warning"
             />
           </div>
 
           {/* 🔥 Latest Notices Table */}
           <div className="row">
             <div className="col-12">
-
-              <Card className="shadow-sm">
-                <Card.Body>
-
-                  <div className="d-flex justify-content-between align-items-center mb-3">
-                    <h5>Latest Notices</h5>
+              <Card className="border-0 shadow-sm rounded-4 overflow-hidden">
+                <Card.Body className="p-4">
+                  <div className="d-flex justify-content-between align-items-center mb-4">
+                    <h5 className="fw-bold mb-0">Latest Notices</h5>
+                    <Button
+                      variant="light"
+                      size="sm"
+                      className="text-primary fw-bold"
+                      onClick={() =>
+                        navigate("/professor/notices")
+                      }
+                    >
+                      View All <i className="fa-solid fa-arrow-right-long ms-1"></i>
+                    </Button>
                   </div>
 
-                  <Table hover responsive>
-                    <thead>
+                  <Table hover responsive className="align-middle border-light">
+                    <thead className="bg-light">
                       <tr>
-                        <th>No.</th>
-                        <th>Title</th>
-                        <th>Category</th>
-                        <th>Date</th>
-                        <th>Author</th>
-                        <th>Status</th>
+                        <th className="border-0 py-3 text-muted small text-uppercase fw-bold">No.</th>
+                        <th className="border-0 py-3 text-muted small text-uppercase fw-bold">Title</th>
+                        <th className="border-0 py-3 text-muted small text-uppercase fw-bold">Category</th>
+                        <th className="border-0 py-3 text-muted small text-uppercase fw-bold">Date</th>
+                        <th className="border-0 py-3 text-muted small text-uppercase fw-bold">Status</th>
                       </tr>
                     </thead>
 
                     <tbody>
                       {loading ? (
                         <tr>
-                          <td colSpan="6" className="text-center">
+                          <td colSpan="5" className="text-center py-5">
+                            <div className="spinner-border text-primary spinner-border-sm me-2"></div>
                             Loading...
                           </td>
                         </tr>
                       ) : notices.length > 0 ? (
                         notices.map((n, i) => (
                           <tr key={n._id || i}>
-                            <td>{i + 1}</td>
-
-                            <td>{n.title}</td>
-
+                            <td className="fw-medium text-muted">{i + 1}</td>
+                            <td className="fw-bold text-dark">{n.title}</td>
                             <td>
                               <Badge
-                                bg={
-                                  categoryVariant[n.category]
-                                }
+                                bg={categoryVariant[n.category]}
+                                className="px-2 py-1 rounded-pill"
+                                style={{ fontSize: '0.75rem' }}
                               >
                                 {n.category}
                               </Badge>
                             </td>
-
-                            <td>
-                              {new Date(
-                                n.createdAt
-                              ).toLocaleDateString()}
+                            <td className="text-muted small">
+                              {new Date(n.createdAt).toLocaleDateString(undefined, {
+                                  month: 'short',
+                                  day: 'numeric',
+                                  year: 'numeric'
+                              })}
                             </td>
-
-                            <td>
-                              {n.createdBy?.name ||
-                                "Admin"}
-                            </td>
-
                             <td>
                               <Badge
-                                bg={
-                                  n.status === "active"
-                                    ? "primary"
-                                    : "warning"
-                                }
+                                bg={n.status === "active" ? "success" : "warning"}
+                                className="px-2 py-1 rounded-pill"
+                                style={{ fontSize: '0.75rem' }}
                               >
                                 {n.status}
                               </Badge>
@@ -170,35 +167,27 @@ export default function ProfessorDashboard() {
                         ))
                       ) : (
                         <tr>
-                          <td colSpan="6" className="text-center">
+                          <td colSpan="5" className="text-center py-5 text-muted">
                             No notices found
                           </td>
                         </tr>
                       )}
                     </tbody>
                   </Table>
-
-                  {/* View All Button */}
-                  <div className="text-center">
-                    <Button
-                      variant="primary"
-                      size="sm"
-                      onClick={() =>
-                        navigate("/professor/notices")
-                      }
-                    >
-                      View All Notices →
-                    </Button>
-                  </div>
-
                 </Card.Body>
               </Card>
-
             </div>
           </div>
 
         </div>
       </div>
+      <style>
+        {`
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        `}
+      </style>
     </div>
   );
 }

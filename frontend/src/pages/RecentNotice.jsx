@@ -34,77 +34,92 @@ export default function RecentNotices() {
   }, []);
 
   // Show latest 5 notices
-  const latestNotices = notices.slice(-5);
+  const latestNotices = notices.slice(-5).reverse();
 
   return (
-    <Card className="h-100 shadow-sm">
-      <Card.Body>
+    <Card className="border-0 shadow-sm rounded-4 h-100 overflow-hidden">
+      <Card.Body className="p-3">
         {/* Header */}
-        <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3">
-          <Card.Title className="mb-0 fw-bold">Recent Notices</Card.Title>
-          <i className="fa-solid fa-ellipsis"></i>
+        <div className="d-flex justify-content-between align-items-center mb-2">
+          <h5 className="mb-0 fw-bold text-dark">Recent Notices</h5>
+          <Button 
+            variant="link" 
+            className="p-0 text-muted"
+            onClick={() => navigate("/admin/notices")}
+          >
+            <i className="fa-solid fa-arrow-up-right-from-square"></i>
+          </Button>
         </div>
 
         {/* Table */}
         <div className="table-responsive">
-          <Table className="text-center align-middle mb-0">
-            <thead className="table-light">
-              <tr>
-                <th>No.</th>
-                <th className="text-start">Notice</th>
-                <th>Category</th>
-                <th>Date</th>
+          <Table hover className="align-middle mb-0">
+            <thead>
+              <tr className="bg-light bg-opacity-50">
+                <th className="border-0 py-3 text-muted small text-uppercase fw-bold ps-3">Notice</th>
+                <th className="border-0 py-3 text-muted small text-uppercase fw-bold text-center">Category</th>
+                <th className="border-0 py-3 text-muted small text-uppercase fw-bold text-center pe-3">Date</th>
               </tr>
             </thead>
             <tbody>
-              {loading && (
+              {loading ? (
                 <tr>
-                  <td colSpan={4} className="text-center text-muted">
-                    Loading notices...
+                  <td colSpan={3} className="text-center py-5">
+                    <div className="spinner-border spinner-border-sm text-primary me-2"></div>
+                    <span className="text-muted">Loading...</span>
                   </td>
                 </tr>
-              )}
-
-              {!loading && latestNotices.length === 0 && (
+              ) : latestNotices.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="text-center text-muted">
-                    No notices found
+                  <td colSpan={3} className="text-center py-5 text-muted">
+                    No recent notices found.
                   </td>
                 </tr>
-              )}
-
-              {!loading &&
+              ) : (
                 latestNotices.map((n, i) => (
-                  <tr key={i}>
-                    <td>{i + 1}</td>
-                    <td className="text-start">
-                      <div className="text-truncate fw-semibold" style={{ maxWidth: "200px" }}>
+                  <tr key={i} className="border-bottom border-light">
+                    <td className="py-3 ps-3">
+                      <div className="fw-bold text-dark text-truncate" style={{ maxWidth: "220px" }}>
                         {n.title}
                       </div>
                     </td>
-                    <td>
-                      <Badge bg={categoryVariant[n.category]}>
+                    <td className="text-center py-3">
+                      <Badge 
+                        bg={categoryVariant[n.category]} 
+                        className="rounded-pill px-3 py-2 fw-semibold shadow-sm"
+                        style={{ fontSize: '0.7rem' }}
+                      >
                         {n.category}
                       </Badge>
                     </td>
-                    <td>{n.publishedAt}</td>
+                    <td className="text-center py-3 text-muted small pe-3 fw-medium">
+                      {n.publishedAt}
+                    </td>
                   </tr>
-                ))}
+                ))
+              )}
             </tbody>
           </Table>
         </div>
 
-        {/* View All Button */}
-        <div className="text-center mt-3">
+        {/* Action Button */}
+        <div className="mt-4">
           <Button
-            variant="primary"
-            size="sm"
+            variant="light"
+            className="w-100 py-2 fw-bold text-primary shadow-sm border-0 rounded-3 transition-all"
             onClick={() => navigate("/admin/notices")}
+            style={{ backgroundColor: "rgba(78, 115, 223, 0.08)" }}
           >
-            View All Notices →
+            View All Notices <i className="fa-solid fa-chevron-right ms-1 small"></i>
           </Button>
         </div>
       </Card.Body>
+      <style>
+          {`
+            .extra-small { font-size: 0.65rem; }
+            .transition-all:hover { filter: brightness(0.95); transform: translateY(-1px); }
+          `}
+      </style>
     </Card>
   );
 }

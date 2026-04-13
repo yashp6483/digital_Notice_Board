@@ -21,11 +21,9 @@ export default function NoticeTable({ notices: externalNotices }) {
   const [showModal, setShowModal] = useState(false);
   const [selectedDoc, setSelectedDoc] = useState(null);
 
-  // ✅ USER DATA FROM LOCALSTORAGE
   const role = localStorage.getItem("role");
   const loggedInUser = localStorage.getItem("name");
 
-  // 🔥 FETCH DATA
   const fetchNotices = useCallback(async () => {
     setLoading(true);
     try {
@@ -47,12 +45,14 @@ export default function NoticeTable({ notices: externalNotices }) {
     fetchNotices();
   }, [fetchNotices]);
 
-  // 🔥 DELETE
   const handleDelete = async (id) => {
     const result = await Swal.fire({
       title: "Delete this notice?",
+      text: "This action cannot be undone.",
       icon: "warning",
       showCancelButton: true,
+      confirmButtonColor: "#ef4444",
+      cancelButtonColor: "#858796",
       confirmButtonText: "Yes, delete",
     });
 
@@ -60,11 +60,7 @@ export default function NoticeTable({ notices: externalNotices }) {
 
     try {
       await deleteNotice(id);
-
-      setNotices((prev) =>
-        prev.filter((n) => n._id !== id)
-      );
-
+      setNotices((prev) => prev.filter((n) => n._id !== id));
       Swal.fire({
         icon: "success",
         title: "Deleted!",
@@ -77,144 +73,145 @@ export default function NoticeTable({ notices: externalNotices }) {
         navigate("/unauthorized");
         return;
       }
-
-      Swal.fire({
-        icon: "error",
-        title: "Delete failed",
-      });
+      Swal.fire({ icon: "error", title: "Delete failed" });
     }
   };
 
   return (
-    <Card className="shadow-sm">
-      <Card.Body>
+    <Card className="border-0 shadow-sm rounded-4 overflow-hidden">
+      <Card.Body className="p-3">
 
-        {/* ✅ ADD BUTTON */}
-        {(role === "admin" || role === "professor") && (
-          <div className="d-flex justify-content-between mb-3">
-            <Card.Title>Notices Management</Card.Title>
-            <Button onClick={() => setShowAddModal(true)}>
-              + Add Notice
+        {/* HEADER */}
+        <div className="d-flex justify-content-between align-items-center mb-3">
+          <h5 className="fw-bold mb-0 text-dark">Notice Archive</h5>
+          {(role === "admin" || role === "professor") && (
+            <Button 
+                onClick={() => setShowAddModal(true)}
+                className="btn-primary rounded-3 px-3 py-2 fw-bold shadow-sm"
+            >
+              <i className="fa-solid fa-plus me-2"></i> Add Notice
             </Button>
-          </div>
-        )}
+          )}
+        </div>
 
-        <Table className="text-center align-middle">
-          <thead>
-            <tr>
-              <th>No.</th>
-              <th>Title</th>
-              <th>Category</th>
-              <th>Date</th>
-              <th>Author</th>
-              <th>Status</th>
-              <th>Doc</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {loading && (
-              <tr>
-                <td colSpan={8}>Loading...</td>
+        <div className="table-responsive">
+          <Table hover className="align-middle mb-0">
+            <thead>
+              <tr className="bg-light bg-opacity-50">
+                <th className="border-0 py-3 text-muted small text-uppercase fw-bold ps-3">Notice Info</th>
+                <th className="border-0 py-3 text-muted small text-uppercase fw-bold text-center">Category</th>
+                <th className="border-0 py-3 text-muted small text-uppercase fw-bold text-center">Date</th>
+                <th className="border-0 py-3 text-muted small text-uppercase fw-bold text-center">Author</th>
+                <th className="border-0 py-3 text-muted small text-uppercase fw-bold text-center">Status</th>
+                <th className="border-0 py-3 text-muted small text-uppercase fw-bold text-center">Doc</th>
+                <th className="border-0 py-3 text-muted small text-uppercase fw-bold text-center pe-3">Actions</th>
               </tr>
-            )}
+            </thead>
 
-            {!loading && notices.length === 0 && (
-              <tr>
-                <td colSpan={8}>No notices found</td>
-              </tr>
-            )}
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td colSpan={7} className="text-center py-5">
+                    <div className="spinner-border spinner-border-sm text-primary me-2"></div>
+                    <span className="text-muted">Fetching notices...</span>
+                  </td>
+                </tr>
+              ) : notices.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="text-center py-5 text-muted">
+                    No notices available.
+                  </td>
+                </tr>
+              ) : (
+                notices.map((n, i) => {
+                  const isOwner = n.createdBy?.name === loggedInUser || n.professor === loggedInUser;
+                  const canEditDelete = role === "admin" || isOwner;
 
-            {!loading &&
-              notices.map((n, i) => {
-                // ✅ CHECK OWNER
-                const isOwner =
-                  n.createdBy?.name === loggedInUser ||
-                  n.professor === loggedInUser;
-
-                // ✅ PERMISSION
-                const canEditDelete =
-                  role === "admin" || isOwner;
-
-                return (
-                  <tr key={i}>
-                    <td>{i + 1}</td>
-
-                    <td>{n.title}</td>
-
-                    <td>
-                      <Badge bg={categoryVariant[n.category]}>
-                        {n.category}
-                      </Badge>
-                    </td>
-
-                    <td>{n.publishedAt}</td>
-
-                    <td>
-                      {n.createdBy?.name ||
-                        n.professor ||
-                        "N/A"}
-                    </td>
-
-                    <td>
-                      <Badge
-                        bg={
-                          n.status === "Active"
-                            ? "primary"
-                            : "warning"
-                        }
-                      >
-                        {n.status}
-                      </Badge>
-                    </td>
-
-                    <td>
-                      <button
-                        className="btn btn-outline-primary btn-sm"
-                        onClick={() => {
-                          setSelectedDoc(n.documentUrl);
-                          setShowModal(true);
-                        }}
-                      >
-                        👁
-                      </button>
-                    </td>
-
-                    {/* ✅ ACTION */}
-                    <td>
-                      {canEditDelete ? (
-                        <div className="d-flex gap-1 justify-content-center">
-                          <button
-                            className="btn btn-warning btn-sm"
-                            onClick={() => {
-                              setEditNotice(n);
-                              setShowAddModal(true);
-                            }}
-                          >
-                            ✏️
-                          </button>
-
-                          <button
-                            className="btn btn-danger btn-sm"
-                            onClick={() =>
-                              handleDelete(n._id)
-                            }
-                          >
-                            🗑
-                          </button>
+                  return (
+                    <tr key={i} className="border-bottom border-light">
+                      <td className="py-3 ps-3">
+                        <div className="fw-bold text-dark text-truncate" style={{ maxWidth: "200px" }}>
+                          {n.title}
                         </div>
-                      ) : (
-                        <span className="text-muted">
-                          No Access
-                        </span>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-          </tbody>
-        </Table>
+                      </td>
+
+                      <td className="text-center py-3">
+                        <Badge 
+                            bg={categoryVariant[n.category]}
+                            className="rounded-pill px-3 py-2 fw-semibold shadow-sm"
+                            style={{ fontSize: '0.7rem' }}
+                        >
+                          {n.category}
+                        </Badge>
+                      </td>
+
+                      <td className="text-center py-3 text-muted small fw-medium">
+                        {n.publishedAt}
+                      </td>
+
+                      <td className="text-center py-3 text-muted small">
+                        {n.createdBy?.name || n.professor || "N/A"}
+                      </td>
+
+                      <td className="text-center py-3">
+                        <Badge
+                          bg={n.status === "Active" ? "success" : "warning"}
+                          className="rounded-pill px-3 py-2 fw-semibold shadow-sm"
+                          style={{ fontSize: '0.7rem' }}
+                        >
+                          {n.status}
+                        </Badge>
+                      </td>
+
+                      <td className="text-center py-3">
+                        <Button
+                          variant="light"
+                          size="sm"
+                          className="text-primary p-2 border-0 rounded-3 shadow-sm"
+                          onClick={() => {
+                            setSelectedDoc(n.documentUrl);
+                            setShowModal(true);
+                          }}
+                        >
+                          <i className="fa-solid fa-eye"></i>
+                        </Button>
+                      </td>
+
+                      <td className="text-center py-3 pe-3">
+                        {canEditDelete ? (
+                          <div className="d-flex gap-2 justify-content-center">
+                            <Button
+                              size="sm"
+                              variant="light"
+                              className="text-warning p-2 border-0 rounded-3 shadow-sm"
+                              onClick={() => {
+                                setEditNotice(n);
+                                setShowAddModal(true);
+                              }}
+                            >
+                              <i className="fa-solid fa-pen-to-square"></i>
+                            </Button>
+
+                            <Button
+                              size="sm"
+                              variant="light"
+                              className="text-danger p-2 border-0 rounded-3 shadow-sm"
+                              onClick={() => handleDelete(n._id)}
+                            >
+                              <i className="fa-solid fa-trash-can"></i>
+                            </Button>
+                          </div>
+                        ) : (
+                          <span className="badge bg-light text-muted fw-normal">Read Only</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </Table>
+        </div>
 
         {/* MODALS */}
         <NoticeAdd

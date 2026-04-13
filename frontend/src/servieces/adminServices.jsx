@@ -1,6 +1,7 @@
 import { formatDate } from "./noticeServices";
+import { buildApiUrl } from "../config/api";
 
-const BASE_URL = "http://localhost:5000/admin";
+const BASE_URL = buildApiUrl("admin");
 
 
 // ✅ Get All Admins
