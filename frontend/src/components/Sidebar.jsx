@@ -3,11 +3,20 @@ import Swal from "sweetalert2";
 import { Link, useLocation } from "react-router-dom";
 
 export default function Sidebar() {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(() => {
+    const saved = localStorage.getItem("sidebarCollapsed");
+    return saved !== null ? JSON.parse(saved) : false;
+  });
   const location = useLocation();
 
   const role = localStorage.getItem("role");
   const basePath = role === "admin" ? "/admin" : "/professor";
+
+  const handleToggle = () => {
+    const newState = !isCollapsed;
+    setIsCollapsed(newState);
+    localStorage.setItem("sidebarCollapsed", JSON.stringify(newState));
+  };
 
   const isActive = (path, exact = false) => {
     if (exact) {
@@ -66,7 +75,7 @@ export default function Sidebar() {
           </div>
         )}
         <button
-          onClick={() => setIsCollapsed(!isCollapsed)}
+          onClick={handleToggle}
           className="btn btn-sm text-white-50 border-0 hover-text-white"
         >
           <i className={`fa-solid ${isCollapsed ? "fa-bars fs-4" : "fa-indent fs-5"}`}></i>

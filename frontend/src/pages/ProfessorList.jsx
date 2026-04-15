@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Card, Table, Badge, Button } from "react-bootstrap";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import ProfessorAdd from "../components/ProfessorAdd";
 import { deleteProfessor, fetchProfessor, mapProfessorForTable } from "../servieces/professorServices";
 import Swal from "sweetalert2";
