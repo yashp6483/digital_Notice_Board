@@ -125,9 +125,6 @@ exports.updateNotice = async (req, res) => {
             {
                 new: true,
                 runValidators: true
-            },
-            {
-                returnDocument: 'after'
             }
         ).populate("createdBy", "name"); 
 
@@ -136,7 +133,7 @@ exports.updateNotice = async (req, res) => {
         }
 
         // Only emit if the notice is active
-        if (status === "active") {
+        if (notice.status === "active") {
             req.io.emit("update_notice", notice);
         }
 

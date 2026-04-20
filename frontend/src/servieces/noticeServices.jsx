@@ -27,16 +27,16 @@ export const fetchNotice = async () => {
 
 export const mapNoticeForTable = (notice) => ({
     ...notice,
-    documentUrl: resolveDocumentUrl(
+    displayDocumentUrl: resolveDocumentUrl(
         notice.documentUrl ||
         notice.document?.url ||
         notice.fileUrl ||
         notice.attachmentUrl ||
         notice.document
     ),
-    publishedAt: formatDate(notice.publishedAt),
+    displayPublishedAt: formatDate(notice.publishedAt),
     professor: notice.createdBy?.name || notice.professor || "-",
-    status: notice.status === "inactive" ? "Inactive" : (notice.status === "scheduled" ? "Scheduled" : "Active")
+    displayStatus: notice.status === "inactive" ? "Inactive" : (notice.status === "scheduled" ? "Scheduled" : "Active")
 })
 
 export const resolveDocumentUrl = (value) => {

@@ -81,12 +81,16 @@ export default function NoticeAdd({ show, onClose, onSubmit, mode = "add", notic
         formData.append("title", form.title);
         formData.append("category", form.category);
         formData.append("description", form.description);
-        formData.append("status", form.status);
+        
+        // If scheduled, we send "scheduled", otherwise the chosen status
+        formData.append("status", form.isScheduled ? "scheduled" : form.status);
+        
         if (form.document) formData.append("document", form.document);
 
         // Handle publishedAt
         if (form.isScheduled) {
-            formData.append("publishedAt", `${form.publishDate}T${form.publishTime}:00`);
+            const scheduledDate = new Date(`${form.publishDate}T${form.publishTime}:00`);
+            formData.append("publishedAt", scheduledDate.toISOString());
         } else {
             formData.append("publishedAt", new Date().toISOString());
         }

@@ -159,7 +159,7 @@ export default function NoticeTable({ notices: externalNotices }) {
                       </td>
 
                       <td className="text-center py-3 text-muted small fw-medium">
-                        {n.publishedAt}
+                        {n.displayPublishedAt}
                       </td>
 
                       <td className="text-center py-3 text-muted small">
@@ -168,11 +168,11 @@ export default function NoticeTable({ notices: externalNotices }) {
 
                       <td className="text-center py-3">
                         <Badge
-                          bg={n.status === "Active" ? "success" : (n.status === "Scheduled" ? "info" : "warning")}
+                          bg={n.displayStatus === "Active" ? "success" : (n.displayStatus === "Scheduled" ? "info" : "warning")}
                           className="rounded-pill px-3 py-2 fw-semibold shadow-sm"
                           style={{ fontSize: '0.7rem' }}
                         >
-                          {n.status}
+                          {n.displayStatus}
                         </Badge>
                       </td>
 
@@ -182,7 +182,7 @@ export default function NoticeTable({ notices: externalNotices }) {
                           size="sm"
                           className="text-primary p-2 border-0 rounded-3 shadow-sm"
                           onClick={() => {
-                            setSelectedDoc(n.documentUrl);
+                            setSelectedDoc(n.displayDocumentUrl);
                             setShowModal(true);
                           }}
                         >
