@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar";
 import TopHeader from "../components/Topheader";
-import { Card, Form, Button, Row, Col } from "react-bootstrap";
+import { Card, Form, Button, Col } from "react-bootstrap";
 import Swal from "sweetalert2";
 
 const DisplayControls = () => {

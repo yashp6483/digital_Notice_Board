@@ -4,36 +4,28 @@ import { categoryVariant } from "../constants/categoryVariant";
 import Swal from "sweetalert2";
 import { buildApiUrl } from "../config/api";
 
-const toInputDate = (value) => {
-    if (!value) return new Date().toISOString().split("T")[0];
-    if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
-
-    const date = new Date(value);
-    if (!Number.isNaN(date.getTime())) {
-        return date.toISOString().split("T")[0];
-    }
-
-    const parts = value.split("-");
-    if (parts.length === 3) {
-        const [day, month, year] = parts;
-        if (day.length === 2 && month.length === 2 && year.length === 4) {
-            return `${year}-${month}-${day}`;
-        }
-    }
-
-    return new Date().toISOString().split("T")[0];
-};
-
 export default function NoticeAdd({ show, onClose, onSubmit, mode = "add", notice }) {
 
-    const createDefaultForm = () => ({
-        title: "",
-        category: "General",
-        publishedAt: new Date().toISOString().split("T")[0],
-        status: "active",
-        description: "",
-        document: null
-    });
+    const createDefaultForm = () => {
+        const now = new Date();
+        let publishDate = "";
+        try {
+            publishDate = now.toISOString().split("T")[0];
+        } catch (e) {
+            publishDate = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
+        }
+        
+        return {
+            title: "",
+            category: "General",
+            isScheduled: false,
+            publishDate,
+            publishTime: now.toTimeString().slice(0, 5),
+            status: "active",
+            description: "",
+            document: null
+        };
+    };
 
     const [form, setForm] = useState(() => createDefaultForm());
 
@@ -41,11 +33,23 @@ export default function NoticeAdd({ show, onClose, onSubmit, mode = "add", notic
         if (!show) return;
 
         if (mode === "edit" && notice) {
+            let pubDateObj = notice.publishedAt ? new Date(notice.publishedAt) : new Date();
+            if (isNaN(pubDateObj.getTime())) pubDateObj = new Date();
+
+            let publishDateStr = "";
+            try {
+                publishDateStr = pubDateObj.toISOString().split("T")[0];
+            } catch (e) {
+                publishDateStr = pubDateObj.toLocaleDateString('en-CA');
+            }
+
             setForm({
                 title: notice.title || "",
                 category: notice.category || "General",
-                publishedAt: toInputDate(notice.publishedAt),
-                status: notice.status?.toLowerCase() || "active",
+                isScheduled: notice.status === "scheduled",
+                publishDate: publishDateStr,
+                publishTime: pubDateObj.toTimeString().slice(0, 5),
+                status: notice.status?.toLowerCase() === "scheduled" ? "active" : (notice.status?.toLowerCase() || "active"),
                 description: notice.description || "",
                 document: null
             });
@@ -55,10 +59,10 @@ export default function NoticeAdd({ show, onClose, onSubmit, mode = "add", notic
     }, [mode, notice, show]);
 
     const handleChange = (e) => {
-        const { name, value, files } = e.target;
+        const { name, value, files, type, checked } = e.target;
         setForm(prev => ({
             ...prev,
-            [name]: files ? files[0] : value
+            [name]: type === "checkbox" ? checked : (files ? files[0] : value)
         }));
     };
 
@@ -72,9 +76,24 @@ export default function NoticeAdd({ show, onClose, onSubmit, mode = "add", notic
         }
 
         const formData = new FormData();
-        Object.keys(form).forEach(key => {
-            if (form[key]) formData.append(key, form[key]);
-        });
+        
+        // Append basic fields
+        formData.append("title", form.title);
+        formData.append("category", form.category);
+        formData.append("description", form.description);
+        
+        // If scheduled, we send "scheduled", otherwise the chosen status
+        formData.append("status", form.isScheduled ? "scheduled" : form.status);
+        
+        if (form.document) formData.append("document", form.document);
+
+        // Handle publishedAt
+        if (form.isScheduled) {
+            const scheduledDate = new Date(`${form.publishDate}T${form.publishTime}:00`);
+            formData.append("publishedAt", scheduledDate.toISOString());
+        } else {
+            formData.append("publishedAt", new Date().toISOString());
+        }
 
         const url = mode === "edit"
             ? buildApiUrl(`admin/notice/update/${notice._id}`)
@@ -83,9 +102,6 @@ export default function NoticeAdd({ show, onClose, onSubmit, mode = "add", notic
         const method = mode === "edit" ? "PUT" : "POST";
 
         try {
-            console.log("Submitting notice to:", url);
-            console.log("Form Data:", Object.fromEntries(formData.entries()));
-
             const res = await fetch(url, {
                 method,
                 headers: { Authorization: `Bearer ${token}` },
@@ -93,10 +109,8 @@ export default function NoticeAdd({ show, onClose, onSubmit, mode = "add", notic
             });
 
             const data = await res.json();
-            console.log("Server Response:", data);
 
             if (!res.ok) {
-                console.error("Notice submission failed:", data);
                 Swal.fire({
                     icon: "error",
                     title: mode === "edit" ? "Update failed" : "Creation failed",
@@ -188,17 +202,49 @@ export default function NoticeAdd({ show, onClose, onSubmit, mode = "add", notic
                         </Col>
 
                         <Col md={12}>
-                            <Form.Group>
-                                <Form.Label className="small fw-bold text-uppercase text-muted">Publish Date</Form.Label>
-                                <Form.Control 
-                                    type="date" 
-                                    name="publishedAt" 
-                                    className="bg-light border-0 py-2 rounded-3"
-                                    value={form.publishedAt} 
-                                    onChange={handleChange} 
+                            <Form.Group className="mb-2">
+                                <Form.Check 
+                                    type="switch"
+                                    id="schedule-switch"
+                                    label="Schedule for later"
+                                    name="isScheduled"
+                                    checked={form.isScheduled}
+                                    onChange={handleChange}
+                                    className="fw-bold text-muted"
                                 />
                             </Form.Group>
                         </Col>
+
+                        {form.isScheduled && (
+                            <>
+                                <Col md={6}>
+                                    <Form.Group>
+                                        <Form.Label className="small fw-bold text-uppercase text-muted">Publish Date</Form.Label>
+                                        <Form.Control 
+                                            type="date" 
+                                            name="publishDate" 
+                                            className="bg-light border-0 py-2 rounded-3"
+                                            value={form.publishDate} 
+                                            onChange={handleChange} 
+                                            required={form.isScheduled}
+                                        />
+                                    </Form.Group>
+                                </Col>
+                                <Col md={6}>
+                                    <Form.Group>
+                                        <Form.Label className="small fw-bold text-uppercase text-muted">Publish Time</Form.Label>
+                                        <Form.Control 
+                                            type="time" 
+                                            name="publishTime" 
+                                            className="bg-light border-0 py-2 rounded-3"
+                                            value={form.publishTime} 
+                                            onChange={handleChange} 
+                                            required={form.isScheduled}
+                                        />
+                                    </Form.Group>
+                                </Col>
+                            </>
+                        )}
 
                         <Col md={12}>
                             <Form.Group>

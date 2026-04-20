@@ -5,15 +5,15 @@ import Swal from "sweetalert2";
 // ✅ Import services
 import { addAdmin, updateAdmin } from "../servieces/adminServices";
 
-export default function AdminAdd({ show, onClose, onSubmit, mode = "add", admin }) {
+const defaultForm = {
+    name: "",
+    email: "",
+    password: "",
+    role: "admin",
+    status: "active"
+};
 
-    const defaultForm = {
-        name: "",
-        email: "",
-        password: "",
-        role: "admin",
-        status: "active"
-    };
+export default function AdminAdd({ show, onClose, onSubmit, mode = "add", admin }) {
 
     const [form, setForm] = useState(defaultForm);
 

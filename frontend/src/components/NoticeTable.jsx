@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { Badge, Button, Card, Table } from "react-bootstrap";
+import { Badge, Button, Card, Table, Pagination } from "react-bootstrap";
 import NoticeAdd from "./NoticeAdd";
 import { categoryVariant } from "../constants/categoryVariant";
 import DocumentViewerModal from "./DocumentViewerModal";
@@ -21,6 +21,10 @@ export default function NoticeTable({ notices: externalNotices }) {
   const [showModal, setShowModal] = useState(false);
   const [selectedDoc, setSelectedDoc] = useState(null);
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(5);
+
   const role = localStorage.getItem("role");
   const loggedInUser = localStorage.getItem("name");
 
@@ -33,6 +37,7 @@ export default function NoticeTable({ notices: externalNotices }) {
         const data = await fetchNotice();
         setNotices(data.map(mapNoticeForTable));
       }
+      setCurrentPage(1); // Reset to first page on new fetch
     } catch (error) {
       console.error(error);
       setNotices([]);
@@ -76,6 +81,14 @@ export default function NoticeTable({ notices: externalNotices }) {
       Swal.fire({ icon: "error", title: "Delete failed" });
     }
   };
+
+  // Pagination Logic
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = notices.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(notices.length / itemsPerPage);
+
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   return (
     <Card className="border-0 shadow-sm rounded-4 overflow-hidden">
@@ -123,7 +136,7 @@ export default function NoticeTable({ notices: externalNotices }) {
                   </td>
                 </tr>
               ) : (
-                notices.map((n, i) => {
+                currentItems.map((n, i) => {
                   const isOwner = n.createdBy?.name === loggedInUser || n.professor === loggedInUser;
                   const canEditDelete = role === "admin" || isOwner;
 
@@ -146,7 +159,7 @@ export default function NoticeTable({ notices: externalNotices }) {
                       </td>
 
                       <td className="text-center py-3 text-muted small fw-medium">
-                        {n.publishedAt}
+                        {n.displayPublishedAt}
                       </td>
 
                       <td className="text-center py-3 text-muted small">
@@ -155,11 +168,11 @@ export default function NoticeTable({ notices: externalNotices }) {
 
                       <td className="text-center py-3">
                         <Badge
-                          bg={n.status === "Active" ? "success" : "warning"}
+                          bg={n.displayStatus === "Active" ? "success" : (n.displayStatus === "Scheduled" ? "info" : "warning")}
                           className="rounded-pill px-3 py-2 fw-semibold shadow-sm"
                           style={{ fontSize: '0.7rem' }}
                         >
-                          {n.status}
+                          {n.displayStatus}
                         </Badge>
                       </td>
 
@@ -169,7 +182,7 @@ export default function NoticeTable({ notices: externalNotices }) {
                           size="sm"
                           className="text-primary p-2 border-0 rounded-3 shadow-sm"
                           onClick={() => {
-                            setSelectedDoc(n.documentUrl);
+                            setSelectedDoc(n.displayDocumentUrl);
                             setShowModal(true);
                           }}
                         >
@@ -213,6 +226,34 @@ export default function NoticeTable({ notices: externalNotices }) {
           </Table>
         </div>
 
+        {/* PAGINATION */}
+        {!loading && notices.length > itemsPerPage && (
+          <div className="d-flex justify-content-between align-items-center mt-3 px-3">
+            <div className="text-muted small">
+              Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, notices.length)} of {notices.length} notices
+            </div>
+            <Pagination className="mb-0">
+              <Pagination.Prev 
+                onClick={() => paginate(currentPage - 1)} 
+                disabled={currentPage === 1} 
+              />
+              {[...Array(totalPages)].map((_, i) => (
+                <Pagination.Item 
+                  key={i + 1} 
+                  active={i + 1 === currentPage} 
+                  onClick={() => paginate(i + 1)}
+                >
+                  {i + 1}
+                </Pagination.Item>
+              ))}
+              <Pagination.Next 
+                onClick={() => paginate(currentPage + 1)} 
+                disabled={currentPage === totalPages} 
+              />
+            </Pagination>
+          </div>
+        )}
+
         {/* MODALS */}
         <NoticeAdd
           show={showAddModal}
@@ -234,3 +275,4 @@ export default function NoticeTable({ notices: externalNotices }) {
     </Card>
   );
 }
+

@@ -45,6 +45,9 @@ io.on("connection", (socket) => {
   });
 });
 
+// 🔥 INITIALIZE NOTICE CRON JOB
+require("./cron/noticeCron")(io);
+
 //Login route 
 app.post("/login", async (req, res) => {
   const { email, password } = req.body;

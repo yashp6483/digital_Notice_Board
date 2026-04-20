@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { Card, Table, Badge, Button } from "react-bootstrap";
-import { Link, useNavigate } from "react-router-dom";
+import { Card, Table, Badge, Button, Pagination } from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
 import ProfessorAdd from "../components/ProfessorAdd";
 import { deleteProfessor, fetchProfessor, mapProfessorForTable } from "../servieces/professorServices";
 import Swal from "sweetalert2";
@@ -12,12 +12,17 @@ export default function ProfessorList({ showDetails = false, maxEntries = null }
   const [loading, setLoading] = useState(false);
   const [professors, setProfessor] = useState([]);
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(5);
+
   const fetchProfessors = useCallback(async () => {
     setLoading(true);
     try {
       const professorsFromApi = await fetchProfessor();
       const list = professorsFromApi.map(mapProfessorForTable);
       setProfessor(list);
+      setCurrentPage(1);
     } catch (error) {
       console.error(error);
       if (error.status === 401 || error.status === 403) {
@@ -79,8 +84,22 @@ export default function ProfessorList({ showDetails = false, maxEntries = null }
     fetchProfessors();
   }, [fetchProfessors]);
 
-  // Slice professors if maxEntries is provided
-  const displayedProfessors = maxEntries ? professors.slice(-maxEntries).reverse() : professors;
+  // Pagination / Slicing Logic
+  let displayedProfessors = professors;
+  let totalPages = 0;
+  let indexOfFirstItem = 0;
+  let indexOfLastItem = 0;
+
+  if (maxEntries) {
+    displayedProfessors = professors.slice(-maxEntries).reverse();
+  } else if (showDetails) {
+    indexOfLastItem = currentPage * itemsPerPage;
+    indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    displayedProfessors = professors.slice(indexOfFirstItem, indexOfLastItem);
+    totalPages = Math.ceil(professors.length / itemsPerPage);
+  }
+
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   return (
     <Card className={`border-0 shadow-sm rounded-4 overflow-hidden ${!showDetails ? 'h-100' : ''}`}>
@@ -194,6 +213,34 @@ export default function ProfessorList({ showDetails = false, maxEntries = null }
           </Table>
         </div>
 
+        {/* Pagination for Management Page */}
+        {showDetails && !loading && professors.length > itemsPerPage && (
+          <div className="d-flex justify-content-between align-items-center mt-3 px-3">
+            <div className="text-muted small">
+              Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, professors.length)} of {professors.length}
+            </div>
+            <Pagination className="mb-0">
+              <Pagination.Prev 
+                onClick={() => paginate(currentPage - 1)} 
+                disabled={currentPage === 1} 
+              />
+              {[...Array(totalPages)].map((_, i) => (
+                <Pagination.Item 
+                  key={i + 1} 
+                  active={i + 1 === currentPage} 
+                  onClick={() => paginate(i + 1)}
+                >
+                  {i + 1}
+                </Pagination.Item>
+              ))}
+              <Pagination.Next 
+                onClick={() => paginate(currentPage + 1)} 
+                disabled={currentPage === totalPages} 
+              />
+            </Pagination>
+          </div>
+        )}
+
         {/* Action Button for Dashboard */}
         {!showDetails && (
           <div className="mt-4">
@@ -230,3 +277,4 @@ export default function ProfessorList({ showDetails = false, maxEntries = null }
     </Card>
   );
 }
+
