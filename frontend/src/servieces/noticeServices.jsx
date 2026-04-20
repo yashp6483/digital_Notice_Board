@@ -36,7 +36,7 @@ export const mapNoticeForTable = (notice) => ({
     ),
     publishedAt: formatDate(notice.publishedAt),
     professor: notice.createdBy?.name || notice.professor || "-",
-    status: notice.status === "inactive" ? "Inactive" : "Active"
+    status: notice.status === "inactive" ? "Inactive" : (notice.status === "scheduled" ? "Scheduled" : "Active")
 })
 
 export const resolveDocumentUrl = (value) => {
@@ -64,8 +64,10 @@ export const formatDate = (value) => {
     const day = String(date.getDate()).padStart(2, "0");   // ✅ 01–31
     const month = String(date.getMonth() + 1).padStart(2, "0"); // ✅ 01–12
     const year = date.getFullYear();
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
 
-    return `${day}-${month}-${year}`;
+    return `${day}-${month}-${year} ${hours}:${minutes}`;
 };
 
 export const deleteNotice = async (id) => {

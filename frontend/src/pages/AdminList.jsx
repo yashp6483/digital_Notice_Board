@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { Card, Table, Badge, Button } from "react-bootstrap";
+import { Card, Table, Badge, Button, Pagination } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import AdminAdd from "../components/AdminAdd";
@@ -13,12 +13,17 @@ export default function AdminList() {
     const [editAdmin, setEditAdmin] = useState(null);
     const [showAddModal, setShowAddModal] = useState(false);
 
+    // Pagination state
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage] = useState(5);
+
     const loadAdmins = useCallback(async () => {
         setLoading(true);
         try {
             const adminsFromApi = await fetchAdmins();
             const list = adminsFromApi.map(mapAdminForTable);
             setAdmins(list);
+            setCurrentPage(1);
         } catch (error) {
             console.error(error);
             if (error.status === 401 || error.status === 403) {
@@ -76,6 +81,14 @@ export default function AdminList() {
         loadAdmins();
     }, [loadAdmins]);
 
+    // Pagination Logic
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentAdmins = admins.slice(indexOfFirstItem, indexOfLastItem);
+    const totalPages = Math.ceil(admins.length / itemsPerPage);
+
+    const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
     return (
         <Card className="border-0 shadow-sm rounded-4 overflow-hidden">
             <Card.Body className="p-4">
@@ -117,7 +130,7 @@ export default function AdminList() {
                                     </td>
                                 </tr>
                             ) : (
-                                admins.map((admin, index) => (
+                                currentAdmins.map((admin, index) => (
                                     <tr key={admin._id} className="border-bottom border-light">
                                         <td className="py-3 ps-3">
                                             <div className="d-flex align-items-center gap-3">
@@ -182,6 +195,34 @@ export default function AdminList() {
                     </Table>
                 </div>
 
+                {/* Pagination */}
+                {!loading && admins.length > itemsPerPage && (
+                    <div className="d-flex justify-content-between align-items-center mt-4 px-3">
+                        <div className="text-muted small">
+                            Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, admins.length)} of {admins.length} accounts
+                        </div>
+                        <Pagination className="mb-0">
+                            <Pagination.Prev 
+                                onClick={() => paginate(currentPage - 1)} 
+                                disabled={currentPage === 1} 
+                            />
+                            {[...Array(totalPages)].map((_, i) => (
+                                <Pagination.Item 
+                                    key={i + 1} 
+                                    active={i + 1 === currentPage} 
+                                    onClick={() => paginate(i + 1)}
+                                >
+                                    {i + 1}
+                                </Pagination.Item>
+                            ))}
+                            <Pagination.Next 
+                                onClick={() => paginate(currentPage + 1)} 
+                                disabled={currentPage === totalPages} 
+                            />
+                        </Pagination>
+                    </div>
+                )}
+
                 <AdminAdd
                     show={showAddModal}
                     onClose={() => {
@@ -196,3 +237,4 @@ export default function AdminList() {
         </Card>
     );
 }
+

@@ -2,12 +2,20 @@ const Notice = require("../models/Notice");
 
 exports.createNotice = async (req, res) => {
     try {
+        const publishedAt = req.body.publishedAt ? new Date(req.body.publishedAt) : new Date();
+        let status = req.body.status || "active";
+
+        // If publishedAt is in the future, set status to scheduled
+        if (status === "active" && publishedAt > new Date()) {
+            status = "scheduled";
+        }
+
         const notice = new Notice({
             title: req.body.title,
             description: req.body.description,
             category: req.body.category,
-            status: req.body.status,
-            publishedAt: req.body.publishedAt,
+            status,
+            publishedAt,
             documentUrl: req.file?.secure_url || req.file?.path || null,
             createdBy: req.user._id || req.user.id
         });
@@ -33,11 +41,14 @@ exports.createNotice = async (req, res) => {
 
         populatedNotice.type = type;
 
-        req.io.emit("new_notice", populatedNotice);
+        // Only emit if the notice is active (published now)
+        if (status === "active") {
+            req.io.emit("new_notice", populatedNotice);
+        }
 
         res.status(201).json({
             success: true,
-            message: "Notice created successfully",
+            message: status === "scheduled" ? "Notice scheduled successfully" : "Notice created successfully",
             notice: populatedNotice
         });
     } catch (err) {
@@ -88,11 +99,18 @@ exports.updateNotice = async (req, res) => {
     try {
         const { id } = req.params;
 
+        const publishedAt = req.body.publishedAt ? new Date(req.body.publishedAt) : new Date();
+        let status = req.body.status || "active";
+
+        if (status === "active" && publishedAt > new Date()) {
+            status = "scheduled";
+        }
+
         const updateData = {
             title: req.body.title,
             category: req.body.category,
-            publishedAt: req.body.publishedAt,
-            status: req.body.status,
+            publishedAt,
+            status,
             description: req.body.description
         };
 
@@ -117,10 +135,13 @@ exports.updateNotice = async (req, res) => {
             return res.status(404).json({ message: "Notice not found" });
         }
 
-        req.io.emit("update_notice", notice);
+        // Only emit if the notice is active
+        if (status === "active") {
+            req.io.emit("update_notice", notice);
+        }
 
         res.json({
-            message: "Notice updated successfully",
+            message: status === "scheduled" ? "Notice updated and scheduled" : "Notice updated successfully",
             notice
         });
 
