@@ -35,6 +35,18 @@ const userSchema = new mongoose.Schema({
         type: String,
         enum: ["admin", "professor"],
         required: true
+    },
+    otp: {
+        codeHash: {
+            type: String
+        },
+        purpose: {
+            type: String,
+            enum: ["login", "forgot_password"]
+        },
+        expiresAt: {
+            type: Date
+        }
     }
 }, { timestamps: true });
 

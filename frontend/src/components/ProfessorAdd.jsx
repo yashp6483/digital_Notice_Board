@@ -34,11 +34,12 @@ export default function ProfessorAdd({ show, onClose, onSubmit, mode = "add", pr
                 department: prof.department || "",
                 email: prof.email || "",
                 phone: prof.phone || "",
-                birthdate: prof.birthdate
-                    ? prof.birthdate.split("-").reverse().join("-")
+                birthdate: prof.birthdate && prof.birthdate !== "-"
+                    ? prof.birthdate.split(" ")[0].split("-").reverse().join("-")
                     : "",
                 password: "",
-                status: prof.status === "Active" ? "active" : "inactive"
+                status: String(prof.status).toLowerCase() === "active" ? "active" : "inactive",
+                role: prof.role || "professor"
             });
         } else {
             setForm(DEFAULT_FORM);

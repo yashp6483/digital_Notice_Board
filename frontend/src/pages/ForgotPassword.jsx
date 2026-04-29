@@ -9,8 +9,41 @@ function ForgotPassword() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
+    const [otp, setOtp] = useState("");
+    const [otpStep, setOtpStep] = useState(false);
 
-    const handleSubmit = async (e) => {
+    const handleRequestOtp = async (e) => {
+        e.preventDefault();
+
+        try {
+            const res = await fetch(buildApiUrl("auth/request-forgot-otp"), {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email })
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                Swal.fire({ icon: "error", title: "Request Failed", text: data.message || "Unable to send OTP" });
+                return;
+            }
+
+            setOtpStep(true);
+
+            Swal.fire({
+                icon: "success",
+                title: "OTP Sent",
+                text: data.devOtp
+                    ? `Use OTP: ${data.devOtp}${data.mailSent ? " (Email also sent)" : ""}${data.mailError ? ` | Mail issue: ${data.mailError}` : ""}`
+                    : "Check your registered channel for OTP"
+            });
+        } catch (err) {
+            Swal.fire({ icon: "error", title: "Server Error", text: "Please try again later" });
+        }
+    };
+
+    const handleResetPassword = async (e) => {
         e.preventDefault();
 
         if (password !== confirmPassword) {
@@ -22,7 +55,7 @@ function ForgotPassword() {
             const res = await fetch(buildApiUrl("forgot-password"), {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email, password })
+                body: JSON.stringify({ email, password, otp })
             });
 
             const data = await res.json();
@@ -38,7 +71,7 @@ function ForgotPassword() {
                 text: "Your security credentials have been updated.",
                 timer: 2000,
                 showConfirmButton: false
-            }).then(() => { navigate("/login"); })
+            }).then(() => { navigate("/login"); });
 
         } catch (err) {
             Swal.fire({ icon: "error", title: "Server Error", text: "Please try again later" });
@@ -46,92 +79,87 @@ function ForgotPassword() {
     };
 
     return (
-        <div 
+        <div
             className="container-fluid min-vh-100 d-flex justify-content-center align-items-center p-3"
-            style={{ 
+            style={{
                 background: "linear-gradient(135deg, #4e73df 0%, #224abe 100%)",
                 position: "relative",
                 overflow: "hidden"
             }}
         >
-            {/* Background Decorations */}
-            <div style={{ position: "absolute", top: "-10%", right: "-5%", width: "400px", height: "400px", background: "rgba(255,255,255,0.05)", borderRadius: "50%" }}></div>
-            <div style={{ position: "absolute", bottom: "-10%", left: "-5%", width: "300px", height: "300px", background: "rgba(255,255,255,0.05)", borderRadius: "50%" }}></div>
-
             <Card className="shadow-lg border-0 rounded-4 overflow-hidden" style={{ maxWidth: "450px", width: "100%", zIndex: 1 }}>
                 <Card.Body className="p-5">
                     <div className="text-center mb-4">
-                        <div className="bg-primary bg-opacity-10 text-primary p-3 rounded-circle d-inline-block mb-3">
-                            <i className="fa-solid fa-key fs-3"></i>
-                        </div>
                         <h3 className="fw-bold text-dark">Reset Password</h3>
-                        <p className="text-muted small">Enter your email and new security credentials</p>
+                        <p className="text-muted small">Request OTP and then set a new password</p>
                     </div>
 
-                    <form onSubmit={handleSubmit}>
-                        {/* EMAIL */}
+                    <form onSubmit={otpStep ? handleResetPassword : handleRequestOtp}>
                         <div className="mb-3">
-                            <label className="form-label fw-semibold small text-uppercase text-muted tracking-wider">Email Address</label>
-                            <div className="input-group">
-                                <span className="input-group-text bg-light border-0 text-muted">
-                                    <i className="fa-solid fa-envelope"></i>
-                                </span>
-                                <input
-                                    type="email"
-                                    className="form-control bg-light border-0 py-2 rounded-end-3 shadow-none"
-                                    placeholder="name@example.com"
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    required
-                                />
-                            </div>
+                            <label className="form-label fw-semibold small text-uppercase text-muted">Email Address</label>
+                            <input
+                                type="email"
+                                className="form-control bg-light border-0 py-2 rounded-3 shadow-none"
+                                placeholder="name@example.com"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                required
+                                disabled={otpStep}
+                            />
                         </div>
 
-                        {/* NEW PASSWORD */}
-                        <div className="mb-3">
-                            <label className="form-label fw-semibold small text-uppercase text-muted tracking-wider">New Password</label>
-                            <div className="input-group">
-                                <span className="input-group-text bg-light border-0 text-muted">
-                                    <i className="fa-solid fa-lock"></i>
-                                </span>
-                                <input
-                                    type="password"
-                                    className="form-control bg-light border-0 py-2 rounded-end-3 shadow-none"
-                                    placeholder="••••••••"
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    required
-                                />
-                            </div>
-                        </div>
+                        {otpStep && (
+                            <>
+                                <div className="mb-3">
+                                    <label className="form-label fw-semibold small text-uppercase text-muted">OTP</label>
+                                    <input
+                                        type="text"
+                                        className="form-control bg-light border-0 py-2 rounded-3 shadow-none"
+                                        placeholder="Enter 6-digit OTP"
+                                        value={otp}
+                                        onChange={(e) => setOtp(e.target.value)}
+                                        required
+                                    />
+                                </div>
 
-                        {/* CONFIRM PASSWORD */}
-                        <div className="mb-4">
-                            <label className="form-label fw-semibold small text-uppercase text-muted tracking-wider">Confirm Password</label>
-                            <div className="input-group">
-                                <span className="input-group-text bg-light border-0 text-muted">
-                                    <i className="fa-solid fa-shield-check"></i>
-                                </span>
-                                <input
-                                    type="password"
-                                    className="form-control bg-light border-0 py-2 rounded-end-3 shadow-none"
-                                    placeholder="••••••••"
-                                    onChange={(e) => setConfirmPassword(e.target.value)}
-                                    required
-                                />
-                            </div>
-                        </div>
+                                <div className="mb-3">
+                                    <label className="form-label fw-semibold small text-uppercase text-muted">New Password</label>
+                                    <input
+                                        type="password"
+                                        className="form-control bg-light border-0 py-2 rounded-3 shadow-none"
+                                        placeholder="********"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        required
+                                    />
+                                </div>
 
-                        <Button 
-                            type="submit" 
-                            className="w-100 py-3 fw-bold rounded-3 shadow-sm border-0 transition-all"
+                                <div className="mb-4">
+                                    <label className="form-label fw-semibold small text-uppercase text-muted">Confirm Password</label>
+                                    <input
+                                        type="password"
+                                        className="form-control bg-light border-0 py-2 rounded-3 shadow-none"
+                                        placeholder="********"
+                                        value={confirmPassword}
+                                        onChange={(e) => setConfirmPassword(e.target.value)}
+                                        required
+                                    />
+                                </div>
+                            </>
+                        )}
+
+                        <Button
+                            type="submit"
+                            className="w-100 py-3 fw-bold rounded-3 shadow-sm border-0"
                             style={{ background: "linear-gradient(to right, #4e73df, #224abe)" }}
                         >
-                            Update Credentials
+                            {otpStep ? "Update Credentials" : "Send OTP"}
                         </Button>
                     </form>
 
                     <div className="text-center mt-4">
                         <Link to="/login" className="text-decoration-none text-primary fw-medium small">
-                            <i className="fa-solid fa-arrow-left me-2"></i> Back to login
+                            Back to login
                         </Link>
                     </div>
                 </Card.Body>
