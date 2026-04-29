@@ -7,47 +7,31 @@ import { buildApiUrl } from "../config/api";
 function ForgotPassword() {
     const navigate = useNavigate();
     const [email, setEmail] = useState("");
+    const [currentPassword, setCurrentPassword] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
-    const [otp, setOtp] = useState("");
-    const [otpStep, setOtpStep] = useState(false);
-
-    const handleRequestOtp = async (e) => {
-        e.preventDefault();
-
-        try {
-            const res = await fetch(buildApiUrl("auth/request-forgot-otp"), {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email })
-            });
-
-            const data = await res.json();
-
-            if (!res.ok) {
-                Swal.fire({ icon: "error", title: "Request Failed", text: data.message || "Unable to send OTP" });
-                return;
-            }
-
-            setOtpStep(true);
-
-            Swal.fire({
-                icon: "success",
-                title: "OTP Sent",
-                text: data.devOtp
-                    ? `Use OTP: ${data.devOtp}${data.mailSent ? " (Email also sent)" : ""}${data.mailError ? ` | Mail issue: ${data.mailError}` : ""}`
-                    : "Check your registered channel for OTP"
-            });
-        } catch (err) {
-            Swal.fire({ icon: "error", title: "Server Error", text: "Please try again later" });
-        }
-    };
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleResetPassword = async (e) => {
         e.preventDefault();
+        if (isSubmitting) return;
+        setIsSubmitting(true);
+
+        if (String(password).length < 8) {
+            Swal.fire({ icon: "error", title: "Invalid Password", text: "Password must be at least 8 characters long" });
+            setIsSubmitting(false);
+            return;
+        }
+
+        if (currentPassword === password) {
+            Swal.fire({ icon: "error", title: "Invalid Password", text: "New password cannot be same as current password" });
+            setIsSubmitting(false);
+            return;
+        }
 
         if (password !== confirmPassword) {
             Swal.fire({ icon: "error", title: "Oops!", text: "Passwords do not match" });
+            setIsSubmitting(false);
             return;
         }
 
@@ -55,7 +39,7 @@ function ForgotPassword() {
             const res = await fetch(buildApiUrl("forgot-password"), {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email, password, otp })
+                body: JSON.stringify({ email, currentPassword, password })
             });
 
             const data = await res.json();
@@ -75,6 +59,8 @@ function ForgotPassword() {
 
         } catch (err) {
             Swal.fire({ icon: "error", title: "Server Error", text: "Please try again later" });
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -91,10 +77,10 @@ function ForgotPassword() {
                 <Card.Body className="p-5">
                     <div className="text-center mb-4">
                         <h3 className="fw-bold text-dark">Reset Password</h3>
-                        <p className="text-muted small">Request OTP and then set a new password</p>
+                        <p className="text-muted small">Use your current password to set a new one</p>
                     </div>
 
-                    <form onSubmit={otpStep ? handleResetPassword : handleRequestOtp}>
+                    <form onSubmit={handleResetPassword}>
                         <div className="mb-3">
                             <label className="form-label fw-semibold small text-uppercase text-muted">Email Address</label>
                             <input
@@ -104,56 +90,52 @@ function ForgotPassword() {
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 required
-                                disabled={otpStep}
                             />
                         </div>
 
-                        {otpStep && (
-                            <>
-                                <div className="mb-3">
-                                    <label className="form-label fw-semibold small text-uppercase text-muted">OTP</label>
-                                    <input
-                                        type="text"
-                                        className="form-control bg-light border-0 py-2 rounded-3 shadow-none"
-                                        placeholder="Enter 6-digit OTP"
-                                        value={otp}
-                                        onChange={(e) => setOtp(e.target.value)}
-                                        required
-                                    />
-                                </div>
+                        <div className="mb-3">
+                            <label className="form-label fw-semibold small text-uppercase text-muted">Current Password</label>
+                            <input
+                                type="password"
+                                className="form-control bg-light border-0 py-2 rounded-3 shadow-none"
+                                placeholder="Current password"
+                                value={currentPassword}
+                                onChange={(e) => setCurrentPassword(e.target.value)}
+                                required
+                            />
+                        </div>
 
-                                <div className="mb-3">
-                                    <label className="form-label fw-semibold small text-uppercase text-muted">New Password</label>
-                                    <input
-                                        type="password"
-                                        className="form-control bg-light border-0 py-2 rounded-3 shadow-none"
-                                        placeholder="********"
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        required
-                                    />
-                                </div>
+                        <div className="mb-3">
+                            <label className="form-label fw-semibold small text-uppercase text-muted">New Password</label>
+                            <input
+                                type="password"
+                                className="form-control bg-light border-0 py-2 rounded-3 shadow-none"
+                                placeholder="********"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                            />
+                        </div>
 
-                                <div className="mb-4">
-                                    <label className="form-label fw-semibold small text-uppercase text-muted">Confirm Password</label>
-                                    <input
-                                        type="password"
-                                        className="form-control bg-light border-0 py-2 rounded-3 shadow-none"
-                                        placeholder="********"
-                                        value={confirmPassword}
-                                        onChange={(e) => setConfirmPassword(e.target.value)}
-                                        required
-                                    />
-                                </div>
-                            </>
-                        )}
+                        <div className="mb-4">
+                            <label className="form-label fw-semibold small text-uppercase text-muted">Confirm Password</label>
+                            <input
+                                type="password"
+                                className="form-control bg-light border-0 py-2 rounded-3 shadow-none"
+                                placeholder="********"
+                                value={confirmPassword}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                required
+                            />
+                        </div>
 
                         <Button
                             type="submit"
                             className="w-100 py-3 fw-bold rounded-3 shadow-sm border-0"
                             style={{ background: "linear-gradient(to right, #4e73df, #224abe)" }}
+                            disabled={isSubmitting}
                         >
-                            {otpStep ? "Update Credentials" : "Send OTP"}
+                            {isSubmitting ? "Please wait..." : "Update Credentials"}
                         </Button>
                     </form>
 

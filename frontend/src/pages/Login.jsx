@@ -12,14 +12,15 @@ function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("admin");
-  const [otp, setOtp] = useState("");
-  const [otpStep, setOtpStep] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleRequestOtp = async (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return;
+    setIsSubmitting(true);
 
     try {
-      const res = await fetch(buildApiUrl("auth/request-login-otp"), {
+      const res = await fetch(buildApiUrl("auth/login"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password, role }),
@@ -32,47 +33,6 @@ function Login() {
           icon: "error",
           title: "Login Failed",
           text: data.message || "Invalid credentials",
-          confirmButtonColor: "#d33",
-        });
-        return;
-      }
-
-      setOtpStep(true);
-
-      Swal.fire({
-        icon: "success",
-        title: "OTP Sent",
-        text: data.devOtp
-          ? `Use OTP: ${data.devOtp}${data.mailSent ? " (Email also sent)" : ""}${data.mailError ? ` | Mail issue: ${data.mailError}` : ""}`
-          : "Check your registered channel for OTP",
-      });
-    } catch (err) {
-      console.log(err);
-      Swal.fire({
-        icon: "error",
-        title: "Server error",
-        text: "Unable to request OTP right now.",
-      });
-    }
-  };
-
-  const handleVerifyOtp = async (e) => {
-    e.preventDefault();
-
-    try {
-      const res = await fetch(buildApiUrl("auth/verify-login-otp"), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, role, otp }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        Swal.fire({
-          icon: "error",
-          title: "OTP Verification Failed",
-          text: data.message || "Invalid OTP",
           confirmButtonColor: "#d33",
         });
         return;
@@ -110,6 +70,8 @@ function Login() {
         title: "Server error",
         text: "Unable to login right now.",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -164,7 +126,7 @@ function Login() {
               <p className="text-muted">Please enter your details to sign in.</p>
             </div>
 
-            <form onSubmit={otpStep ? handleVerifyOtp : handleRequestOtp}>
+            <form onSubmit={handleLogin}>
               <div className="mb-3">
                 <label className="form-label fw-semibold text-secondary small text-uppercase">Login As</label>
                 <select
@@ -172,7 +134,6 @@ function Login() {
                   value={role}
                   onChange={(e) => setRole(e.target.value)}
                   required
-                  disabled={otpStep}
                 >
                   <option value="admin">Administrator</option>
                   <option value="professor">Professor</option>
@@ -188,7 +149,6 @@ function Login() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  disabled={otpStep}
                 />
               </div>
 
@@ -201,23 +161,8 @@ function Login() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  disabled={otpStep}
                 />
               </div>
-
-              {otpStep && (
-                <div className="mb-4">
-                  <label className="form-label fw-semibold text-secondary small text-uppercase">OTP</label>
-                  <input
-                    type="text"
-                    className="form-control border-2 py-2 shadow-sm rounded-3 bg-light"
-                    placeholder="Enter 6-digit OTP"
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value)}
-                    required
-                  />
-                </div>
-              )}
 
               <div className="d-flex justify-content-between align-items-center mb-4">
                 <Link to="/forgot-password" id="forgot-password-link" className="text-primary text-decoration-none fw-medium small">
@@ -229,8 +174,9 @@ function Login() {
                 type="submit"
                 className="w-100 py-3 fw-bold rounded-3 shadow-sm border-0"
                 style={{ background: "linear-gradient(to right, #4e73df, #224abe)" }}
+                disabled={isSubmitting}
               >
-                {otpStep ? "Verify OTP & Sign In" : "Send OTP"}
+                {isSubmitting ? "Please wait..." : "Sign In"}
               </Button>
             </form>
           </div>
