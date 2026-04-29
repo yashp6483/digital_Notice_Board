@@ -46,6 +46,23 @@ const userSchema = new mongoose.Schema({
         },
         expiresAt: {
             type: Date
+        },
+        lastSentAt: {
+            type: Date
+        },
+        verifyAttempts: {
+            type: Number,
+            default: 0
+        },
+        lockedUntil: {
+            type: Date
+        },
+        requestCount: {
+            type: Number,
+            default: 0
+        },
+        requestWindowStartedAt: {
+            type: Date
         }
     }
 }, { timestamps: true });
