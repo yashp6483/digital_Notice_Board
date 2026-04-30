@@ -4,9 +4,11 @@ import NoticeAdd from "./NoticeAdd";
 import { categoryVariant } from "../constants/categoryVariant";
 import DocumentViewerModal from "./DocumentViewerModal";
 import {
+  approveNotice,
   deleteNotice,
   fetchNotice,
   mapNoticeForTable,
+  rejectNotice,
 } from "../servieces/noticeServices";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
@@ -28,8 +30,10 @@ export default function NoticeTable({ notices: externalNotices }) {
   const role = localStorage.getItem("role");
   const loggedInUser = localStorage.getItem("name");
 
-  const fetchNotices = useCallback(async () => {
-    setLoading(true);
+  const fetchNotices = useCallback(async (resetPage = true, silent = false) => {
+    if (!silent) {
+      setLoading(true);
+    }
     try {
       if (externalNotices) {
         setNotices(externalNotices.map(mapNoticeForTable));
@@ -37,17 +41,29 @@ export default function NoticeTable({ notices: externalNotices }) {
         const data = await fetchNotice();
         setNotices(data.map(mapNoticeForTable));
       }
-      setCurrentPage(1); // Reset to first page on new fetch
+      if (resetPage) {
+        setCurrentPage(1);
+      }
     } catch (error) {
       console.error(error);
       setNotices([]);
     } finally {
-      setLoading(false);
+      if (!silent) {
+        setLoading(false);
+      }
     }
   }, [externalNotices]);
 
   useEffect(() => {
     fetchNotices();
+  }, [fetchNotices]);
+
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      fetchNotices(false, true);
+    }, 10000);
+
+    return () => clearInterval(intervalId);
   }, [fetchNotices]);
 
   const handleDelete = async (id) => {
@@ -79,6 +95,46 @@ export default function NoticeTable({ notices: externalNotices }) {
         return;
       }
       Swal.fire({ icon: "error", title: "Delete failed" });
+    }
+  };
+
+  const handleApprove = async (id) => {
+    try {
+      await approveNotice(id);
+      await fetchNotices();
+      Swal.fire({
+        icon: "success",
+        title: "Notice approved",
+        timer: 1200,
+        showConfirmButton: false,
+      });
+    } catch (error) {
+      if (error.status === 401 || error.status === 403) {
+        localStorage.clear();
+        navigate("/unauthorized");
+        return;
+      }
+      Swal.fire({ icon: "error", title: "Approve failed" });
+    }
+  };
+
+  const handleReject = async (id) => {
+    try {
+      await rejectNotice(id);
+      await fetchNotices();
+      Swal.fire({
+        icon: "success",
+        title: "Notice rejected",
+        timer: 1200,
+        showConfirmButton: false,
+      });
+    } catch (error) {
+      if (error.status === 401 || error.status === 403) {
+        localStorage.clear();
+        navigate("/unauthorized");
+        return;
+      }
+      Swal.fire({ icon: "error", title: "Reject failed" });
     }
   };
 
@@ -116,6 +172,7 @@ export default function NoticeTable({ notices: externalNotices }) {
                 <th className="border-0 py-3 text-muted small text-uppercase fw-bold text-center">Date</th>
                 <th className="border-0 py-3 text-muted small text-uppercase fw-bold text-center">Author</th>
                 <th className="border-0 py-3 text-muted small text-uppercase fw-bold text-center">Status</th>
+                <th className="border-0 py-3 text-muted small text-uppercase fw-bold text-center">Approval</th>
                 <th className="border-0 py-3 text-muted small text-uppercase fw-bold text-center">Doc</th>
                 <th className="border-0 py-3 text-muted small text-uppercase fw-bold text-center pe-3">Actions</th>
               </tr>
@@ -124,14 +181,14 @@ export default function NoticeTable({ notices: externalNotices }) {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="text-center py-5">
+                  <td colSpan={8} className="text-center py-5">
                     <div className="spinner-border spinner-border-sm text-primary me-2"></div>
                     <span className="text-muted">Fetching notices...</span>
                   </td>
                 </tr>
               ) : notices.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="text-center py-5 text-muted">
+                  <td colSpan={8} className="text-center py-5 text-muted">
                     No notices available.
                   </td>
                 </tr>
@@ -139,6 +196,11 @@ export default function NoticeTable({ notices: externalNotices }) {
                 currentItems.map((n, i) => {
                   const isOwner = n.createdBy?.name === loggedInUser || n.professor === loggedInUser;
                   const canEditDelete = role === "admin" || isOwner;
+                  const canReviewApproval =
+                    role === "admin" &&
+                    n.approvalStatus === "pending" &&
+                    n.requiresApproval === true &&
+                    n.createdBy?.role === "professor";
 
                   return (
                     <tr key={i} className="border-bottom border-light">
@@ -177,6 +239,22 @@ export default function NoticeTable({ notices: externalNotices }) {
                       </td>
 
                       <td className="text-center py-3">
+                        <Badge
+                          bg={
+                            n.displayApprovalStatus === "Approved"
+                              ? "success"
+                              : n.displayApprovalStatus === "Rejected"
+                                ? "danger"
+                                : "warning"
+                          }
+                          className="rounded-pill px-3 py-2 fw-semibold shadow-sm"
+                          style={{ fontSize: "0.7rem" }}
+                        >
+                          {n.displayApprovalStatus}
+                        </Badge>
+                      </td>
+
+                      <td className="text-center py-3">
                         <Button
                           variant="light"
                           size="sm"
@@ -191,7 +269,28 @@ export default function NoticeTable({ notices: externalNotices }) {
                       </td>
 
                       <td className="text-center py-3 pe-3">
-                        {canEditDelete ? (
+                        {canReviewApproval ? (
+                          <div className="d-flex gap-2 justify-content-center">
+                            <Button
+                              size="sm"
+                              variant="light"
+                              className="text-success p-2 border-0 rounded-3 shadow-sm"
+                              onClick={() => handleApprove(n._id)}
+                              title="Approve"
+                            >
+                              <i className="fa-solid fa-check"></i>
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="light"
+                              className="text-danger p-2 border-0 rounded-3 shadow-sm"
+                              onClick={() => handleReject(n._id)}
+                              title="Reject"
+                            >
+                              <i className="fa-solid fa-xmark"></i>
+                            </Button>
+                          </div>
+                        ) : canEditDelete ? (
                           <div className="d-flex gap-2 justify-content-center">
                             <Button
                               size="sm"

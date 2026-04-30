@@ -4,7 +4,16 @@ const upload = require("../middleware/uploadMiddleware");
 
 const { verifyToken, authorize } = require("../middleware/authMiddleware");
 
-const { createNotice, getNotices, deleteNotice, updateNotice, getMyNotices, getPublicNotice } = require("../Controller/noticeController");
+const {
+    createNotice,
+    getNotices,
+    deleteNotice,
+    updateNotice,
+    getMyNotices,
+    getPublicNotice,
+    approveNotice,
+    rejectNotice
+} = require("../Controller/noticeController");
 
 router.get("/display/notices",getPublicNotice);
 router.get("/notices", verifyToken, authorize("admin", "professor"), getNotices);
@@ -18,6 +27,8 @@ router.put(
     updateNotice
 );
 router.get("/my-notices",verifyToken,authorize("admin","professor"),getMyNotices);
+router.patch("/notice/approve/:id", verifyToken, authorize("admin"), approveNotice);
+router.patch("/notice/reject/:id", verifyToken, authorize("admin"), rejectNotice);
 
 
 module.exports = router;

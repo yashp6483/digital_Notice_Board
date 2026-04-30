@@ -10,9 +10,10 @@ export const calculateNoticeStats = (notices = []) => {
     (acc, notice) => {
       acc.total += 1;
       const status = String(notice.status || "").toLowerCase();
+      const approvalStatus = String(notice.approvalStatus || "").toLowerCase();
       if (status === "active") acc.active += 1;
       else if (status === "inactive") acc.inactive += 1;
-      else if (status === "pending") acc.pending += 1;
+      if (approvalStatus === "pending") acc.pending += 1;
       return acc;
     },
     getInitialNoticeStats()

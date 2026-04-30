@@ -1,9 +1,23 @@
 const Notice = require("../models/Notice");
 
+const parseBoolean = (value, fallback = false) => {
+    if (typeof value === "boolean") return value;
+    if (typeof value === "string") {
+        if (value.toLowerCase() === "true") return true;
+        if (value.toLowerCase() === "false") return false;
+    }
+    return fallback;
+};
+
 exports.createNotice = async (req, res) => {
     try {
+        const isProfessor = req.user?.role === "professor";
         const publishedAt = req.body.publishedAt ? new Date(req.body.publishedAt) : new Date();
         let status = req.body.status || "active";
+        const requiresApproval = isProfessor
+            ? parseBoolean(req.body.requiresApproval, true)
+            : false;
+        const approvalStatus = requiresApproval ? "pending" : "approved";
 
         // If publishedAt is in the future, set status to scheduled
         if (status === "active" && publishedAt > new Date()) {
@@ -15,6 +29,8 @@ exports.createNotice = async (req, res) => {
             description: req.body.description,
             category: req.body.category,
             status,
+            approvalStatus,
+            requiresApproval,
             publishedAt,
             documentUrl: req.file?.secure_url || req.file?.path || null,
             createdBy: req.user._id || req.user.id
@@ -23,7 +39,7 @@ exports.createNotice = async (req, res) => {
         await notice.save();
 
         const populatedNotice = await Notice.findById(notice._id)
-            .populate("createdBy", "name")
+            .populate("createdBy", "name role")
             .lean();
 
         // 🔍 DETECT TYPE
@@ -41,14 +57,18 @@ exports.createNotice = async (req, res) => {
 
         populatedNotice.type = type;
 
-        // Only emit if the notice is active (published now)
-        if (status === "active") {
+        // Only emit if the notice is active and approved
+        if (status === "active" && approvalStatus === "approved") {
             req.io.emit("new_notice", populatedNotice);
         }
 
         res.status(201).json({
             success: true,
-            message: status === "scheduled" ? "Notice scheduled successfully" : "Notice created successfully",
+            message: requiresApproval
+                ? "Notice submitted for approval"
+                : status === "scheduled"
+                    ? "Notice scheduled successfully"
+                    : "Notice created successfully",
             notice: populatedNotice
         });
     } catch (err) {
@@ -60,7 +80,7 @@ exports.getNotices = async (req, res) => {
     try {
         const notices = await Notice.find({ isDeleted: false })
             .sort({ createdAt: -1 })
-            .populate("createdBy", "name")
+            .populate("createdBy", "name role")
             .lean();
 
         res.status(200).json({
@@ -97,10 +117,15 @@ exports.deleteNotice = async (req, res) => {
 
 exports.updateNotice = async (req, res) => {
     try {
+        const isProfessor = req.user?.role === "professor";
         const { id } = req.params;
 
         const publishedAt = req.body.publishedAt ? new Date(req.body.publishedAt) : new Date();
         let status = req.body.status || "active";
+        const requiresApproval = isProfessor
+            ? parseBoolean(req.body.requiresApproval, true)
+            : false;
+        const approvalStatus = requiresApproval ? "pending" : "approved";
 
         if (status === "active" && publishedAt > new Date()) {
             status = "scheduled";
@@ -111,6 +136,8 @@ exports.updateNotice = async (req, res) => {
             category: req.body.category,
             publishedAt,
             status,
+            approvalStatus,
+            requiresApproval,
             description: req.body.description
         };
 
@@ -126,19 +153,23 @@ exports.updateNotice = async (req, res) => {
                 new: true,
                 runValidators: true
             }
-        ).populate("createdBy", "name"); 
+        ).populate("createdBy", "name role"); 
 
         if (!notice) {
             return res.status(404).json({ message: "Notice not found" });
         }
 
-        // Only emit if the notice is active
-        if (notice.status === "active") {
+        // Only emit if the notice is active and approved
+        if (notice.status === "active" && notice.approvalStatus === "approved") {
             req.io.emit("update_notice", notice);
         }
 
         res.json({
-            message: status === "scheduled" ? "Notice updated and scheduled" : "Notice updated successfully",
+            message: requiresApproval
+                ? "Notice updated and submitted for approval"
+                : status === "scheduled"
+                    ? "Notice updated and scheduled"
+                    : "Notice updated successfully",
             notice
         });
 
@@ -157,7 +188,7 @@ exports.getMyNotices = async (req, res) => {
         const notices = await Notice.find({
             createdBy: userId,
             isDeleted: false
-        }).populate("createdBy", "name email");;
+        }).populate("createdBy", "name email role");;
 
         res.json(notices);
     } catch (error) {
@@ -169,10 +200,11 @@ exports.getPublicNotice = async (req, res) => {
     try {
         const notices = await Notice.find({
             status: "active",
+            approvalStatus: "approved",
             isDeleted: false
         })
             .sort({ createdAt: -1 })
-            .populate("createdBy", "name")
+            .populate("createdBy", "name role")
             .lean();
 
         const formattedNotices = notices.map((notice) => {
@@ -196,5 +228,74 @@ exports.getPublicNotice = async (req, res) => {
 
     } catch (err) {
         res.status(500).json({ message: "Failed to fetch notices" });
+    }
+};
+
+exports.approveNotice = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const notice = await Notice.findById(id).populate("createdBy", "name role");
+        if (!notice) {
+            return res.status(404).json({ message: "Notice not found" });
+        }
+        if (!notice.requiresApproval || notice.createdBy?.role !== "professor") {
+            return res.status(400).json({
+                message: "Only professor notices marked for approval can be approved"
+            });
+        }
+
+        notice.approvalStatus = "approved";
+        notice.requiresApproval = true;
+        if (notice.publishedAt <= new Date() && notice.status !== "inactive") {
+            notice.status = "active";
+        }
+        await notice.save();
+
+        if (notice.status === "active") {
+            req.io.emit("new_notice", notice);
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Notice approved successfully",
+            notice
+        });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+exports.rejectNotice = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const existingNotice = await Notice.findById(id).populate("createdBy", "name role");
+        if (!existingNotice) {
+            return res.status(404).json({ message: "Notice not found" });
+        }
+        if (!existingNotice.requiresApproval || existingNotice.createdBy?.role !== "professor") {
+            return res.status(400).json({
+                message: "Only professor notices marked for approval can be rejected"
+            });
+        }
+
+        const notice = await Notice.findByIdAndUpdate(
+            id,
+            { approvalStatus: "rejected", requiresApproval: true },
+            { new: true, runValidators: true }
+        ).populate("createdBy", "name role");
+
+        if (!notice) {
+            return res.status(404).json({ message: "Notice not found" });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Notice rejected successfully",
+            notice
+        });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
     }
 };

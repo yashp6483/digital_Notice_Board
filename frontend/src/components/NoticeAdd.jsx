@@ -5,6 +5,7 @@ import Swal from "sweetalert2";
 import { buildApiUrl } from "../config/api";
 
 export default function NoticeAdd({ show, onClose, onSubmit, mode = "add", notice }) {
+    const role = localStorage.getItem("role");
 
     const createDefaultForm = () => {
         const now = new Date();
@@ -22,6 +23,7 @@ export default function NoticeAdd({ show, onClose, onSubmit, mode = "add", notic
             publishDate,
             publishTime: now.toTimeString().slice(0, 5),
             status: "active",
+            requiresApproval: true,
             description: "",
             document: null
         };
@@ -50,6 +52,7 @@ export default function NoticeAdd({ show, onClose, onSubmit, mode = "add", notic
                 publishDate: publishDateStr,
                 publishTime: pubDateObj.toTimeString().slice(0, 5),
                 status: notice.status?.toLowerCase() === "scheduled" ? "active" : (notice.status?.toLowerCase() || "active"),
+                requiresApproval: notice.requiresApproval ?? true,
                 description: notice.description || "",
                 document: null
             });
@@ -81,6 +84,7 @@ export default function NoticeAdd({ show, onClose, onSubmit, mode = "add", notic
         formData.append("title", form.title);
         formData.append("category", form.category);
         formData.append("description", form.description);
+        formData.append("requiresApproval", String(form.requiresApproval));
         
         // If scheduled, we send "scheduled", otherwise the chosen status
         formData.append("status", form.isScheduled ? "scheduled" : form.status);
@@ -214,6 +218,22 @@ export default function NoticeAdd({ show, onClose, onSubmit, mode = "add", notic
                                 />
                             </Form.Group>
                         </Col>
+
+                        {role === "professor" && (
+                            <Col md={12}>
+                                <Form.Group className="mb-2">
+                                    <Form.Check
+                                        type="switch"
+                                        id="approval-switch"
+                                        label="Send for admin approval"
+                                        name="requiresApproval"
+                                        checked={form.requiresApproval}
+                                        onChange={handleChange}
+                                        className="fw-bold text-muted"
+                                    />
+                                </Form.Group>
+                            </Col>
+                        )}
 
                         {form.isScheduled && (
                             <>

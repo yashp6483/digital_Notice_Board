@@ -78,6 +78,7 @@ export default function AdminDashboard() {
             <StateCards title="Total Notices" value={noticeStats.total} icon="fa-bullhorn" color="primary" />
             <StateCards title="Active Notices" value={noticeStats.active} icon="fa-circle-check" color="info" />
             <StateCards title="Inactive Notices" value={noticeStats.inactive} icon="fa-clock" color="warning" />
+            <StateCards title="Pending Approvals" value={noticeStats.pending} icon="fa-hourglass-half" color="danger" />
             
             <StateCards title="Total Professors" value={professorStats.total} icon="fa-user-tie" color="secondary" />
             <StateCards title="Active Professors" value={professorStats.active} icon="fa-user-check" color="success" />

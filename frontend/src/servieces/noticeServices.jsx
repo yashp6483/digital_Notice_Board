@@ -36,7 +36,13 @@ export const mapNoticeForTable = (notice) => ({
     ),
     displayPublishedAt: formatDate(notice.publishedAt),
     professor: notice.createdBy?.name || notice.professor || "-",
-    displayStatus: notice.status === "inactive" ? "Inactive" : (notice.status === "scheduled" ? "Scheduled" : "Active")
+    displayStatus: notice.status === "inactive" ? "Inactive" : (notice.status === "scheduled" ? "Scheduled" : "Active"),
+    displayApprovalStatus:
+        notice.approvalStatus === "approved"
+            ? "Approved"
+            : notice.approvalStatus === "rejected"
+                ? "Rejected"
+                : "Pending"
 })
 
 export const resolveDocumentUrl = (value) => {
@@ -145,4 +151,54 @@ export const fetchPublicNotices = async () => {
     }
 
     return data.notices || [];
+};
+
+export const approveNotice = async (id) => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+        const error = new Error("Unauthorized");
+        error.status = 401;
+        throw error;
+    }
+
+    const res = await fetch(buildApiUrl(`admin/notice/approve/${id}`), {
+        method: "PATCH",
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+        const error = new Error(data.message || "Approve failed");
+        error.status = res.status;
+        throw error;
+    }
+
+    return data;
+};
+
+export const rejectNotice = async (id) => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+        const error = new Error("Unauthorized");
+        error.status = 401;
+        throw error;
+    }
+
+    const res = await fetch(buildApiUrl(`admin/notice/reject/${id}`), {
+        method: "PATCH",
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+        const error = new Error(data.message || "Reject failed");
+        error.status = res.status;
+        throw error;
+    }
+
+    return data;
 };

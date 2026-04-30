@@ -27,6 +27,10 @@ const noticeSchema = new mongoose.Schema({
         enum : ["pending", "approved", "rejected"],
         default : "pending"
     },
+    requiresApproval : {
+        type : Boolean,
+        default : false
+    },
     publishedAt : {
         type : Date,
         default : Date.now
