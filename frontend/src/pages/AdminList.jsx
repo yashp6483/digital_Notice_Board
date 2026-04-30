@@ -3,7 +3,7 @@ import { Card, Table, Badge, Button, Pagination } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import AdminAdd from "../components/AdminAdd";
-import { fetchAdmins, deleteAdmin, mapAdminForTable } from "../servieces/adminServices";
+import { fetchAdmins, deleteAdmin, mapAdminForTable } from "../services/adminServices";
 
 export default function AdminList() {
     const navigate = useNavigate();

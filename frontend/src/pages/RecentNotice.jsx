@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Card, Table, Badge, Button } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import { categoryVariant } from "../constants/categoryVariant";
-import { fetchNotice, mapNoticeForTable } from "../servieces/noticeServices";
+import { fetchNotice, mapNoticeForTable } from "../services/noticeServices";
 import Swal from "sweetalert2";
 
 export default function RecentNotices() {
@@ -10,6 +10,7 @@ export default function RecentNotices() {
 
   const [notices, setNotices] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [statusFilter, setStatusFilter] = useState("all");
 
   const fetchNotices = async () => {
     setLoading(true);
@@ -48,7 +49,10 @@ export default function RecentNotices() {
   };
 
   // Show latest 5 notices
-  const latestNotices = notices.slice(-5).reverse();
+  const filteredNotices = statusFilter === "all"
+    ? notices
+    : notices.filter((n) => String(n.approvalStatus || "").toLowerCase() === statusFilter);
+  const latestNotices = filteredNotices.slice(-5).reverse();
 
   return (
     <Card className="border-0 shadow-sm rounded-4 h-100 overflow-hidden">
@@ -56,13 +60,26 @@ export default function RecentNotices() {
         {/* Header */}
         <div className="d-flex justify-content-between align-items-center mb-2">
           <h5 className="mb-0 fw-bold text-dark">Recent Notices</h5>
-          <Button 
-            variant="link" 
-            className="p-0 text-muted"
-            onClick={() => navigate("/admin/notices")}
-          >
-            <i className="fa-solid fa-arrow-up-right-from-square"></i>
-          </Button>
+          <div className="d-flex gap-2">
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="form-select form-select-sm"
+              style={{ width: "140px" }}
+            >
+              <option value="all">All</option>
+              <option value="pending">Pending</option>
+              <option value="approved">Approved</option>
+              <option value="rejected">Rejected</option>
+            </select>
+            <Button
+              variant="link"
+              className="p-0 text-muted"
+              onClick={() => navigate("/admin/notices")}
+            >
+              <i className="fa-solid fa-arrow-up-right-from-square"></i>
+            </Button>
+          </div>
         </div>
 
         {/* Table */}

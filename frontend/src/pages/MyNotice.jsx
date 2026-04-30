@@ -9,7 +9,7 @@ import {
     calculateNoticeStats,
     getInitialNoticeStats,
 } from "../utils/statHelpers";
-import { fetchMyNotice } from "../servieces/noticeServices";
+import { fetchMyNotice } from "../services/noticeServices";
 
 export default function MyNotice() {
     const navigate = useNavigate();

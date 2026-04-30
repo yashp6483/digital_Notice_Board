@@ -4,8 +4,8 @@ import Sidebar from '../components/Sidebar';
 import TopHeader from '../components/Topheader';
 import StateCards from '../components/StateCards';
 import ProfessorList from './ProfessorList';
-import { fetchNotice } from '../servieces/noticeServices';
-import { fetchProfessor } from '../servieces/professorServices';
+import { fetchNotice } from '../services/noticeServices';
+import { fetchProfessor } from '../services/professorServices';
 import Swal from "sweetalert2";
 import {
     calculateNoticeStats,

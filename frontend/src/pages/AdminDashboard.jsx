@@ -5,9 +5,9 @@ import TopHeader from '../components/Topheader';
 import StateCards from '../components/StateCards';
 import RecentNotices from './RecentNotice';
 import ProfessorList from './ProfessorList';
-import { fetchNotice, mapNoticeForTable } from '../servieces/noticeServices';
-import { fetchProfessor } from '../servieces/professorServices';
-import { fetchAdmins } from '../servieces/adminServices';
+import { fetchNotice, mapNoticeForTable } from '../services/noticeServices';
+import { fetchProfessor } from '../services/professorServices';
+import { fetchAdmins } from '../services/adminServices';
 import Swal from "sweetalert2";
 
 import {
@@ -72,6 +72,21 @@ export default function AdminDashboard() {
         <div className='flex-grow-1 p-3 p-md-4 overflow-auto custom-scrollbar' style={{ backgroundColor: "#f8fafc", height: "100vh" }}>
 
           <TopHeader />
+
+          <div className="d-flex flex-wrap gap-2 mb-4">
+            <button type="button" className="btn btn-primary btn-sm" onClick={() => navigate("/admin/notices")}>
+              <i className="fa-solid fa-plus me-2"></i>Add Notice
+            </button>
+            <button type="button" className="btn btn-outline-danger btn-sm" onClick={() => navigate("/admin/notices")}>
+              <i className="fa-solid fa-hourglass-half me-2"></i>Review Pending
+            </button>
+            <button type="button" className="btn btn-outline-secondary btn-sm" onClick={() => navigate("/admin/professors")}>
+              <i className="fa-solid fa-user-tie me-2"></i>Manage Professors
+            </button>
+            <button type="button" className="btn btn-outline-dark btn-sm" onClick={() => navigate("/admin/admins")}>
+              <i className="fa-solid fa-user-shield me-2"></i>Manage Admins
+            </button>
+          </div>
 
           {/* STATS SECTION */}
           <div className="row g-4 mb-3">

@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 import {
   getProfessorProfile,
   updateProfessorProfile,
-} from "../servieces/professorServices";
+} from "../services/professorServices";
 
 export default function ProfessorProfile() {
   const navigate = useNavigate();

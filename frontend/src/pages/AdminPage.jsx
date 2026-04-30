@@ -3,9 +3,9 @@ import { useNavigate } from 'react-router-dom'
 import Sidebar from '../components/Sidebar';
 import TopHeader from '../components/Topheader';
 import StateCards from '../components/StateCards';
-import { fetchNotice } from '../servieces/noticeServices';
-import { fetchProfessor } from '../servieces/professorServices';
-import { fetchAdmins } from '../servieces/adminServices';
+import { fetchNotice } from '../services/noticeServices';
+import { fetchProfessor } from '../services/professorServices';
+import { fetchAdmins } from '../services/adminServices';
 import Swal from "sweetalert2";
 import {
     calculateNoticeStats,

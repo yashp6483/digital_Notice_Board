@@ -4,7 +4,7 @@ import TopHeader from "../components/Topheader";
 import { Card, Form, Button, Row, Col } from "react-bootstrap";
 import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
-import { getAdminProfile, updateAdminProfile } from "../servieces/adminServices";
+import { getAdminProfile, updateAdminProfile } from "../services/adminServices";
 
 export default function AdminProfile() {
   const navigate = useNavigate();

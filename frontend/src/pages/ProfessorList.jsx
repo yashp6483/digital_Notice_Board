@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { Card, Table, Badge, Button, Pagination } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import ProfessorAdd from "../components/ProfessorAdd";
-import { deleteProfessor, fetchProfessor, mapProfessorForTable } from "../servieces/professorServices";
+import { deleteProfessor, fetchProfessor, mapProfessorForTable } from "../services/professorServices";
 import Swal from "sweetalert2";
 
 export default function ProfessorList({ showDetails = false, maxEntries = null }) {

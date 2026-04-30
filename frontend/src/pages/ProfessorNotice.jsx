@@ -4,7 +4,7 @@ import Sidebar from '../components/Sidebar';
 import TopHeader from '../components/Topheader';
 import StateCards from '../components/StateCards';
 import NoticeTable from '../components/NoticeTable';
-import { fetchNotice } from '../servieces/noticeServices';
+import { fetchNotice } from '../services/noticeServices';
 import Swal from "sweetalert2";
 import {
     calculateNoticeStats,

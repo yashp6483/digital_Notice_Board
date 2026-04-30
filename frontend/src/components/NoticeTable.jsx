@@ -9,7 +9,7 @@ import {
   fetchNotice,
   mapNoticeForTable,
   rejectNotice,
-} from "../servieces/noticeServices";
+} from "../services/noticeServices";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 

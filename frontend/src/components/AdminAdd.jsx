@@ -3,7 +3,7 @@ import { Modal, ModalHeader, ModalBody, ModalTitle, Form, Button } from "react-b
 import Swal from "sweetalert2";
 
 // ✅ Import services
-import { addAdmin, updateAdmin } from "../servieces/adminServices";
+import { addAdmin, updateAdmin } from "../services/adminServices";
 
 const defaultForm = {
     name: "",
