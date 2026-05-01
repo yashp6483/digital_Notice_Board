@@ -4,7 +4,7 @@ import TopHeader from "../components/Topheader";
 import StateCards from "../components/StateCards";
 import { useNavigate } from "react-router-dom";
 import { calculateNoticeStats, getInitialNoticeStats } from "../utils/statHelpers";
-import { fetchMyNotice, fetchNotice } from "../services/noticeServices";
+import { fetchMyNotice, fetchNotice, mapNoticeForTable } from "../services/noticeServices";
 import Swal from "sweetalert2";
 import { Table, Button, Badge, Card } from "react-bootstrap";
 import { categoryVariant } from "../constants/categoryVariant";
@@ -12,6 +12,7 @@ import { categoryVariant } from "../constants/categoryVariant";
 export default function ProfessorDashboard() {
   const navigate = useNavigate();
 
+  const [noticeStats, setNoticeStats] = useState(getInitialNoticeStats());
   const [myNoticeStats, setMyNoticeStats] = useState(getInitialNoticeStats());
   const [notices, setNotices] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -20,7 +21,7 @@ export default function ProfessorDashboard() {
     setLoading(true);
     try {
       const [noticesFromApi, myNoticesFromApi] = await Promise.all([fetchNotice(), fetchMyNotice()]);
-      const normalizedNotices = noticesFromApi || [];
+      const normalizedNotices = (noticesFromApi || []).map(mapNoticeForTable);
       const normalizedMyNotices = myNoticesFromApi || [];
 
       const latestFive = normalizedNotices
@@ -28,6 +29,7 @@ export default function ProfessorDashboard() {
         .slice(0, 5);
 
       setNotices(latestFive);
+      setNoticeStats(calculateNoticeStats(normalizedNotices));
       setMyNoticeStats(calculateNoticeStats(normalizedMyNotices));
     } catch (error) {
       console.error(error);
@@ -70,7 +72,7 @@ export default function ProfessorDashboard() {
           </div>
 
           <div className="row g-4 mb-3">
-            <StateCards title="My Total Notices" value={myNoticeStats.total} icon="fa-bookmark" color="primary" />
+            <StateCards title="Total Notices" value={noticeStats.total} icon="fa-bullhorn" color="primary" />
             <StateCards title="My Active Notices" value={myNoticeStats.active} icon="fa-circle-check" color="info" />
             <StateCards title="My Inactive Notices" value={myNoticeStats.inactive} icon="fa-clock" color="warning" />
             <StateCards title="My Pending Approvals" value={myNoticeStats.pending} icon="fa-hourglass-half" color="danger" />
@@ -93,6 +95,7 @@ export default function ProfessorDashboard() {
                         <th className="border-0 py-3 text-muted small text-uppercase fw-bold">No.</th>
                         <th className="border-0 py-3 text-muted small text-uppercase fw-bold">Title</th>
                         <th className="border-0 py-3 text-muted small text-uppercase fw-bold">Category</th>
+                        <th className="border-0 py-3 text-muted small text-uppercase fw-bold">Author</th>
                         <th className="border-0 py-3 text-muted small text-uppercase fw-bold">Date</th>
                         <th className="border-0 py-3 text-muted small text-uppercase fw-bold">Status</th>
                       </tr>
@@ -101,7 +104,7 @@ export default function ProfessorDashboard() {
                     <tbody>
                       {loading ? (
                         <tr>
-                          <td colSpan="5" className="text-center py-5">
+                          <td colSpan="6" className="text-center py-5">
                             <div className="spinner-border text-primary spinner-border-sm me-2"></div>
                             Loading...
                           </td>
@@ -117,22 +120,25 @@ export default function ProfessorDashboard() {
                               </Badge>
                             </td>
                             <td className="text-muted small">
-                              {new Date(n.createdAt).toLocaleDateString(undefined, {
-                                month: "short",
-                                day: "numeric",
-                                year: "numeric"
-                              })}
+                              {n.createdBy?.name || n.professor || "N/A"}
+                            </td>
+                            <td className="text-muted small">
+                              {n.displayPublishedAt}
                             </td>
                             <td>
-                              <Badge bg={n.status === "active" ? "success" : "warning"} className="px-2 py-1 rounded-pill" style={{ fontSize: "0.75rem" }}>
-                                {n.status}
+                              <Badge
+                                bg={n.displayStatus === "Active" ? "success" : (n.displayStatus === "Scheduled" ? "info" : "warning")}
+                                className="px-3 py-1 rounded-pill text-lowercase"
+                                style={{ fontSize: "0.75rem" }}
+                              >
+                                {String(n.displayStatus || "").toLowerCase()}
                               </Badge>
                             </td>
                           </tr>
                         ))
                       ) : (
                         <tr>
-                          <td colSpan="5" className="text-center py-5 text-muted">
+                          <td colSpan="6" className="text-center py-5 text-muted">
                             No notices found
                           </td>
                         </tr>
