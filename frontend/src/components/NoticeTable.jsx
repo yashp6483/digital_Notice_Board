@@ -22,6 +22,8 @@ export default function NoticeTable({ notices: externalNotices }) {
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [selectedDoc, setSelectedDoc] = useState(null);
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -141,10 +143,27 @@ export default function NoticeTable({ notices: externalNotices }) {
   // Pagination Logic
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = notices.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(notices.length / itemsPerPage);
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+  const filteredNotices = notices.filter((notice) => {
+    const status = String(notice.status || "").toLowerCase();
+    const approvalStatus = String(notice.approvalStatus || "").toLowerCase();
+
+    const matchesStatus =
+      statusFilter === "all" ||
+      (statusFilter === "active" && status === "active") ||
+      (statusFilter === "inactive" && status === "inactive") ||
+      (statusFilter === "pending" && approvalStatus === "pending") ||
+      ((statusFilter === "approved" || statusFilter === "approve") && approvalStatus === "approved");
+
+    const title = String(notice.title || "").toLowerCase();
+    const matchesSearch = !normalizedQuery || title.includes(normalizedQuery);
+
+    return matchesStatus && matchesSearch;
+  });
+  const currentFilteredItems = filteredNotices.slice(indexOfFirstItem, indexOfLastItem);
+  const filteredTotalPages = Math.ceil(filteredNotices.length / itemsPerPage);
 
   return (
     <Card className="border-0 shadow-sm rounded-4 overflow-hidden">
@@ -153,14 +172,42 @@ export default function NoticeTable({ notices: externalNotices }) {
         {/* HEADER */}
         <div className="d-flex justify-content-between align-items-center mb-3">
           <h5 className="fw-bold mb-0 text-dark">Notice Archive</h5>
-          {(role === "admin" || role === "professor") && (
-            <Button 
-                onClick={() => setShowAddModal(true)}
-                className="btn-primary rounded-3 px-3 py-2 fw-bold shadow-sm"
+          <div className="d-flex align-items-center gap-2">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="form-control form-control-sm"
+              placeholder="Search notice name"
+              style={{ width: "220px" }}
+            />
+            <select
+              value={statusFilter}
+              onChange={(e) => {
+                setStatusFilter(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="form-select form-select-sm"
+              style={{ width: "140px" }}
             >
-              <i className="fa-solid fa-plus me-2"></i> Add Notice
-            </Button>
-          )}
+              <option value="all">All</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+              <option value="pending">Pending</option>
+              <option value="approved">Approved</option>
+            </select>
+            {(role === "admin" || role === "professor") && (
+              <Button 
+                  onClick={() => setShowAddModal(true)}
+                  className="btn-primary rounded-3 px-3 py-2 fw-bold shadow-sm"
+              >
+                <i className="fa-solid fa-plus me-2"></i> Add Notice
+              </Button>
+            )}
+          </div>
         </div>
 
         <div className="table-responsive">
@@ -170,6 +217,7 @@ export default function NoticeTable({ notices: externalNotices }) {
                 <th className="border-0 py-3 text-muted small text-uppercase fw-bold ps-3">Notice Info</th>
                 <th className="border-0 py-3 text-muted small text-uppercase fw-bold text-center">Category</th>
                 <th className="border-0 py-3 text-muted small text-uppercase fw-bold text-center">Date</th>
+                <th className="border-0 py-3 text-muted small text-uppercase fw-bold text-center">Expire Time</th>
                 <th className="border-0 py-3 text-muted small text-uppercase fw-bold text-center">Author</th>
                 <th className="border-0 py-3 text-muted small text-uppercase fw-bold text-center">Status</th>
                 <th className="border-0 py-3 text-muted small text-uppercase fw-bold text-center">Approval</th>
@@ -181,19 +229,19 @@ export default function NoticeTable({ notices: externalNotices }) {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={8} className="text-center py-5">
+                  <td colSpan={9} className="text-center py-5">
                     <div className="spinner-border spinner-border-sm text-primary me-2"></div>
                     <span className="text-muted">Fetching notices...</span>
                   </td>
                 </tr>
-              ) : notices.length === 0 ? (
+              ) : filteredNotices.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="text-center py-5 text-muted">
+                  <td colSpan={9} className="text-center py-5 text-muted">
                     No notices available.
                   </td>
                 </tr>
               ) : (
-                currentItems.map((n, i) => {
+                currentFilteredItems.map((n, i) => {
                   const isOwner = n.createdBy?.name === loggedInUser || n.professor === loggedInUser;
                   const canEditDelete = role === "admin" || isOwner;
                   const canReviewApproval =
@@ -222,6 +270,9 @@ export default function NoticeTable({ notices: externalNotices }) {
 
                       <td className="text-center py-3 text-muted small fw-medium">
                         {n.displayPublishedAt}
+                      </td>
+                      <td className="text-center py-3 text-muted small fw-medium">
+                        {n.displayExpiresAt || "-"}
                       </td>
 
                       <td className="text-center py-3 text-muted small">
@@ -326,17 +377,17 @@ export default function NoticeTable({ notices: externalNotices }) {
         </div>
 
         {/* PAGINATION */}
-        {!loading && notices.length > itemsPerPage && (
+        {!loading && filteredNotices.length > itemsPerPage && (
           <div className="d-flex justify-content-between align-items-center mt-3 px-3">
             <div className="text-muted small">
-              Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, notices.length)} of {notices.length} notices
+              Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredNotices.length)} of {filteredNotices.length} notices
             </div>
             <Pagination className="mb-0">
               <Pagination.Prev 
                 onClick={() => paginate(currentPage - 1)} 
                 disabled={currentPage === 1} 
               />
-              {[...Array(totalPages)].map((_, i) => (
+              {[...Array(filteredTotalPages)].map((_, i) => (
                 <Pagination.Item 
                   key={i + 1} 
                   active={i + 1 === currentPage} 
@@ -347,7 +398,7 @@ export default function NoticeTable({ notices: externalNotices }) {
               ))}
               <Pagination.Next 
                 onClick={() => paginate(currentPage + 1)} 
-                disabled={currentPage === totalPages} 
+                disabled={currentPage === filteredTotalPages} 
               />
             </Pagination>
           </div>

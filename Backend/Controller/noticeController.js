@@ -11,17 +11,24 @@ const parseBoolean = (value, fallback = false) => {
 
 exports.createNotice = async (req, res) => {
     try {
+        const now = new Date();
         const isProfessor = req.user?.role === "professor";
-        const publishedAt = req.body.publishedAt ? new Date(req.body.publishedAt) : new Date();
+        const publishedAt = req.body.publishedAt ? new Date(req.body.publishedAt) : now;
+        const expiresAt = req.body.expiresAt ? new Date(req.body.expiresAt) : null;
         let status = req.body.status || "active";
+        let autoExpired = false;
         const requiresApproval = isProfessor
             ? parseBoolean(req.body.requiresApproval, true)
             : false;
         const approvalStatus = requiresApproval ? "pending" : "approved";
 
         // If publishedAt is in the future, set status to scheduled
-        if (status === "active" && publishedAt > new Date()) {
+        if (status === "active" && publishedAt > now) {
             status = "scheduled";
+        }
+        if (status === "active" && expiresAt && expiresAt <= now) {
+            status = "inactive";
+            autoExpired = true;
         }
 
         const notice = new Notice({
@@ -32,6 +39,8 @@ exports.createNotice = async (req, res) => {
             approvalStatus,
             requiresApproval,
             publishedAt,
+            expiresAt,
+            autoExpired,
             documentUrl: req.file?.secure_url || req.file?.path || null,
             createdBy: req.user._id || req.user.id
         });
@@ -117,25 +126,37 @@ exports.deleteNotice = async (req, res) => {
 
 exports.updateNotice = async (req, res) => {
     try {
+        const now = new Date();
         const isProfessor = req.user?.role === "professor";
         const { id } = req.params;
 
-        const publishedAt = req.body.publishedAt ? new Date(req.body.publishedAt) : new Date();
+        const publishedAt = req.body.publishedAt ? new Date(req.body.publishedAt) : now;
+        const expiresAt = req.body.expiresAt ? new Date(req.body.expiresAt) : null;
         let status = req.body.status || "active";
+        let autoExpired = false;
         const requiresApproval = isProfessor
             ? parseBoolean(req.body.requiresApproval, true)
             : false;
         const approvalStatus = requiresApproval ? "pending" : "approved";
 
-        if (status === "active" && publishedAt > new Date()) {
+        if (status === "active" && publishedAt > now) {
             status = "scheduled";
+        }
+        if (status === "active" && expiresAt && expiresAt <= now) {
+            status = "inactive";
+            autoExpired = true;
+        }
+        if (status === "inactive") {
+            autoExpired = false;
         }
 
         const updateData = {
             title: req.body.title,
             category: req.body.category,
             publishedAt,
+            expiresAt,
             status,
+            autoExpired,
             approvalStatus,
             requiresApproval,
             description: req.body.description
@@ -247,8 +268,13 @@ exports.approveNotice = async (req, res) => {
 
         notice.approvalStatus = "approved";
         notice.requiresApproval = true;
-        if (notice.publishedAt <= new Date() && notice.status !== "inactive") {
+        if (
+            notice.publishedAt <= new Date() &&
+            (!notice.expiresAt || notice.expiresAt > new Date()) &&
+            notice.status !== "inactive"
+        ) {
             notice.status = "active";
+            notice.autoExpired = false;
         }
         await notice.save();
 

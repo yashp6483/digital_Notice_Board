@@ -35,6 +35,7 @@ export const mapNoticeForTable = (notice) => ({
         notice.document
     ),
     displayPublishedAt: formatDate(notice.publishedAt),
+    displayExpiresAt: formatDate(notice.expiresAt),
     professor: notice.createdBy?.name || notice.professor || "-",
     displayStatus: notice.status === "inactive" ? "Inactive" : (notice.status === "scheduled" ? "Scheduled" : "Active"),
     displayApprovalStatus:

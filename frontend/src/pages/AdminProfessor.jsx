@@ -4,34 +4,24 @@ import Sidebar from '../components/Sidebar';
 import TopHeader from '../components/Topheader';
 import StateCards from '../components/StateCards';
 import ProfessorList from './ProfessorList';
-import { fetchNotice } from '../services/noticeServices';
 import { fetchProfessor } from '../services/professorServices';
 import Swal from "sweetalert2";
 import {
-    calculateNoticeStats,
-    getInitialNoticeStats,
     calculateProfessorStats,
     getInitialProfessorStats
 } from '../utils/statHelpers';
 
 export default function AdminProfessor() {
     const navigate = useNavigate();
-    const [noticeStats, setNoticeStats] = useState(getInitialNoticeStats());
     const [professorStats, setProfessorStats] = useState(getInitialProfessorStats());
     const [loading, setLoading] = useState(false);
 
     const loadPageStats = useCallback(async () => {
         setLoading(true);
         try {
-            const [noticesFromApi, professorsFromApi] = await Promise.all([
-                fetchNotice(),
-                fetchProfessor()
-            ]);
-
-            const normalizedNotices = noticesFromApi || [];
+            const professorsFromApi = await fetchProfessor();
             const normalizedProfessors = professorsFromApi || [];
 
-            setNoticeStats(calculateNoticeStats(normalizedNotices));
             setProfessorStats(calculateProfessorStats(normalizedProfessors));
         } catch (error) {
             console.error(error);
@@ -67,10 +57,9 @@ export default function AdminProfessor() {
                     </div>
 
                     <div className="row g-4 mb-3">
-                        <StateCards title="Total Notices" value={noticeStats.total} icon="fa-bullhorn" color="primary" />
-                        <StateCards title="Active Notices" value={noticeStats.active} icon="fa-circle-check" color="info" />
-                        <StateCards title="Inactive Notices" value={noticeStats.inactive} icon="fa-clock" color="warning" />
-                        <StateCards title="Total Professors" value={professorStats.total} icon="fa-user-tie" color="success" />
+                        <StateCards title="Total Professors" value={professorStats.total} icon="fa-user-tie" color="primary" />
+                        <StateCards title="Active Professors" value={professorStats.active} icon="fa-user-check" color="success" />
+                        <StateCards title="Inactive Professors" value={professorStats.inactive} icon="fa-user-slash" color="warning" />
                     </div>
 
                     <div className='row g-4'>

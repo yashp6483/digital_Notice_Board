@@ -12,6 +12,9 @@ export default function AdminList() {
     const [loading, setLoading] = useState(false);
     const [editAdmin, setEditAdmin] = useState(null);
     const [showAddModal, setShowAddModal] = useState(false);
+    const [searchQuery, setSearchQuery] = useState("");
+    const [statusFilter, setStatusFilter] = useState("all");
+    const [roleFilter, setRoleFilter] = useState("all");
 
     // Pagination state
     const [currentPage, setCurrentPage] = useState(1);
@@ -81,11 +84,28 @@ export default function AdminList() {
         loadAdmins();
     }, [loadAdmins]);
 
+    const normalizedQuery = searchQuery.trim().toLowerCase();
+    const filteredAdmins = admins.filter((admin) => {
+        const name = String(admin.name || "").toLowerCase();
+        const email = String(admin.email || "").toLowerCase();
+        const status = String(admin.status || "").toLowerCase();
+        const role = String(admin.role || "").toLowerCase();
+
+        const matchesSearch =
+            !normalizedQuery ||
+            name.includes(normalizedQuery) ||
+            email.includes(normalizedQuery);
+        const matchesStatus = statusFilter === "all" || status === statusFilter;
+        const matchesRole = roleFilter === "all" || role === roleFilter;
+
+        return matchesSearch && matchesStatus && matchesRole;
+    });
+
     // Pagination Logic
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentAdmins = admins.slice(indexOfFirstItem, indexOfLastItem);
-    const totalPages = Math.ceil(admins.length / itemsPerPage);
+    const currentAdmins = filteredAdmins.slice(indexOfFirstItem, indexOfLastItem);
+    const totalPages = Math.ceil(filteredAdmins.length / itemsPerPage);
 
     const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
@@ -95,12 +115,50 @@ export default function AdminList() {
                 {/* Header */}
                 <div className="d-flex justify-content-between align-items-center mb-4">
                     <h5 className="mb-0 fw-bold text-dark">Administrative Accounts</h5>
-                    <Button 
-                        onClick={() => setShowAddModal(true)}
-                        className="btn-primary rounded-3 px-3 py-2 fw-bold shadow-sm"
-                    >
-                        <i className="fa-solid fa-user-plus me-2"></i> Add Admin
-                    </Button>
+                    <div className="d-flex align-items-center gap-2">
+                        <input
+                            type="text"
+                            value={searchQuery}
+                            onChange={(e) => {
+                                setSearchQuery(e.target.value);
+                                setCurrentPage(1);
+                            }}
+                            className="form-control form-control-sm"
+                            placeholder="Search admin"
+                            style={{ width: "190px" }}
+                        />
+                        <select
+                            value={statusFilter}
+                            onChange={(e) => {
+                                setStatusFilter(e.target.value);
+                                setCurrentPage(1);
+                            }}
+                            className="form-select form-select-sm"
+                            style={{ width: "120px" }}
+                        >
+                            <option value="all">All Status</option>
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                        </select>
+                        <select
+                            value={roleFilter}
+                            onChange={(e) => {
+                                setRoleFilter(e.target.value);
+                                setCurrentPage(1);
+                            }}
+                            className="form-select form-select-sm"
+                            style={{ width: "140px" }}
+                        >
+                            <option value="all">All Roles</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                        <Button 
+                            onClick={() => setShowAddModal(true)}
+                            className="btn-primary rounded-3 px-3 py-2 fw-bold shadow-sm"
+                        >
+                            <i className="fa-solid fa-user-plus me-2"></i> Add Admin
+                        </Button>
+                    </div>
                 </div>
 
                 {/* Table */}
@@ -123,7 +181,7 @@ export default function AdminList() {
                                         <span className="text-muted">Loading admins...</span>
                                     </td>
                                 </tr>
-                            ) : admins.length === 0 ? (
+                            ) : filteredAdmins.length === 0 ? (
                                 <tr>
                                     <td colSpan={4} className="text-center py-5 text-muted">
                                         No administrative accounts found.
@@ -196,10 +254,10 @@ export default function AdminList() {
                 </div>
 
                 {/* Pagination */}
-                {!loading && admins.length > itemsPerPage && (
+                {!loading && filteredAdmins.length > itemsPerPage && (
                     <div className="d-flex justify-content-between align-items-center mt-4 px-3">
                         <div className="text-muted small">
-                            Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, admins.length)} of {admins.length} accounts
+                            Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredAdmins.length)} of {filteredAdmins.length} accounts
                         </div>
                         <Pagination className="mb-0">
                             <Pagination.Prev 

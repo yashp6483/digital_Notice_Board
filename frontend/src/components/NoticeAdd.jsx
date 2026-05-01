@@ -22,6 +22,8 @@ export default function NoticeAdd({ show, onClose, onSubmit, mode = "add", notic
             isScheduled: false,
             publishDate,
             publishTime: now.toTimeString().slice(0, 5),
+            expiryDate: "",
+            expiryTime: "",
             status: "active",
             requiresApproval: true,
             description: "",
@@ -37,12 +39,23 @@ export default function NoticeAdd({ show, onClose, onSubmit, mode = "add", notic
         if (mode === "edit" && notice) {
             let pubDateObj = notice.publishedAt ? new Date(notice.publishedAt) : new Date();
             if (isNaN(pubDateObj.getTime())) pubDateObj = new Date();
+            const expDateObj = notice.expiresAt ? new Date(notice.expiresAt) : null;
 
             let publishDateStr = "";
             try {
                 publishDateStr = pubDateObj.toISOString().split("T")[0];
             } catch (e) {
                 publishDateStr = pubDateObj.toLocaleDateString('en-CA');
+            }
+            let expiryDateStr = "";
+            let expiryTimeStr = "";
+            if (expDateObj && !isNaN(expDateObj.getTime())) {
+                try {
+                    expiryDateStr = expDateObj.toISOString().split("T")[0];
+                } catch (e) {
+                    expiryDateStr = expDateObj.toLocaleDateString("en-CA");
+                }
+                expiryTimeStr = expDateObj.toTimeString().slice(0, 5);
             }
 
             setForm({
@@ -51,6 +64,8 @@ export default function NoticeAdd({ show, onClose, onSubmit, mode = "add", notic
                 isScheduled: notice.status === "scheduled",
                 publishDate: publishDateStr,
                 publishTime: pubDateObj.toTimeString().slice(0, 5),
+                expiryDate: expiryDateStr,
+                expiryTime: expiryTimeStr,
                 status: notice.status?.toLowerCase() === "scheduled" ? "active" : (notice.status?.toLowerCase() || "active"),
                 requiresApproval: notice.requiresApproval ?? true,
                 description: notice.description || "",
@@ -97,6 +112,11 @@ export default function NoticeAdd({ show, onClose, onSubmit, mode = "add", notic
             formData.append("publishedAt", scheduledDate.toISOString());
         } else {
             formData.append("publishedAt", new Date().toISOString());
+        }
+
+        if (form.expiryDate && form.expiryTime) {
+            const expiresAt = new Date(`${form.expiryDate}T${form.expiryTime}:00`);
+            formData.append("expiresAt", expiresAt.toISOString());
         }
 
         const url = mode === "edit"
@@ -265,6 +285,31 @@ export default function NoticeAdd({ show, onClose, onSubmit, mode = "add", notic
                                 </Col>
                             </>
                         )}
+
+                        <Col md={6}>
+                            <Form.Group>
+                                <Form.Label className="small fw-bold text-uppercase text-muted">Expiry Date</Form.Label>
+                                <Form.Control
+                                    type="date"
+                                    name="expiryDate"
+                                    className="bg-light border-0 py-2 rounded-3"
+                                    value={form.expiryDate}
+                                    onChange={handleChange}
+                                />
+                            </Form.Group>
+                        </Col>
+                        <Col md={6}>
+                            <Form.Group>
+                                <Form.Label className="small fw-bold text-uppercase text-muted">Expiry Time</Form.Label>
+                                <Form.Control
+                                    type="time"
+                                    name="expiryTime"
+                                    className="bg-light border-0 py-2 rounded-3"
+                                    value={form.expiryTime}
+                                    onChange={handleChange}
+                                />
+                            </Form.Group>
+                        </Col>
 
                         <Col md={12}>
                             <Form.Group>

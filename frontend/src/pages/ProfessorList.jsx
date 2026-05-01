@@ -11,6 +11,8 @@ export default function ProfessorList({ showDetails = false, maxEntries = null }
   const [showAddModal, setShowAddModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [professors, setProfessor] = useState([]);
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -85,18 +87,29 @@ export default function ProfessorList({ showDetails = false, maxEntries = null }
   }, [fetchProfessors]);
 
   // Pagination / Slicing Logic
-  let displayedProfessors = professors;
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+  const filteredProfessors = professors.filter((prof) => {
+    const name = String(prof.name || "").toLowerCase();
+    const status = String(prof.status || "").toLowerCase();
+
+    const matchesSearch = !normalizedQuery || name.includes(normalizedQuery);
+    const matchesStatus = statusFilter === "all" || status === statusFilter;
+
+    return matchesSearch && matchesStatus;
+  });
+
+  let displayedProfessors = filteredProfessors;
   let totalPages = 0;
   let indexOfFirstItem = 0;
   let indexOfLastItem = 0;
 
   if (maxEntries) {
-    displayedProfessors = professors.slice(-maxEntries).reverse();
+    displayedProfessors = filteredProfessors.slice(-maxEntries).reverse();
   } else if (showDetails) {
     indexOfLastItem = currentPage * itemsPerPage;
     indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    displayedProfessors = professors.slice(indexOfFirstItem, indexOfLastItem);
-    totalPages = Math.ceil(professors.length / itemsPerPage);
+    displayedProfessors = filteredProfessors.slice(indexOfFirstItem, indexOfLastItem);
+    totalPages = Math.ceil(filteredProfessors.length / itemsPerPage);
   }
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
@@ -107,22 +120,50 @@ export default function ProfessorList({ showDetails = false, maxEntries = null }
         {/* Header */}
         <div className="d-flex justify-content-between align-items-center mb-2">
           <h5 className="mb-0 fw-bold text-dark">Professor Directory</h5>
-          {showDetails ? (
-            <Button 
-                onClick={() => setShowAddModal(true)}
-                className="btn-primary rounded-3 px-3 py-2 fw-bold shadow-sm"
-            >
-                <i className="fa-solid fa-plus me-2"></i> Add Professor
-            </Button>
-          ) : (
-            <Button 
-                variant="link" 
-                className="p-0 text-muted"
-                onClick={() => navigate("/admin/professors")}
-            >
-                <i className="fa-solid fa-arrow-up-right-from-square"></i>
-            </Button>
-          )}
+          <div className="d-flex align-items-center gap-2">
+            {showDetails ? (
+              <>
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="form-control form-control-sm"
+                  placeholder="Search professor name"
+                  style={{ width: "220px" }}
+                />
+                <select
+                  value={statusFilter}
+                  onChange={(e) => {
+                    setStatusFilter(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="form-select form-select-sm"
+                  style={{ width: "130px" }}
+                >
+                  <option value="all">All</option>
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                </select>
+              <Button 
+                  onClick={() => setShowAddModal(true)}
+                  className="btn-primary rounded-3 px-3 py-2 fw-bold shadow-sm"
+              >
+                  <i className="fa-solid fa-plus me-2"></i> Add Professor
+              </Button>
+              </>
+            ) : (
+              <Button 
+                  variant="link" 
+                  className="p-0 text-muted"
+                  onClick={() => navigate("/admin/professors")}
+              >
+                  <i className="fa-solid fa-arrow-up-right-from-square"></i>
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Responsive Table */}
@@ -214,10 +255,10 @@ export default function ProfessorList({ showDetails = false, maxEntries = null }
         </div>
 
         {/* Pagination for Management Page */}
-        {showDetails && !loading && professors.length > itemsPerPage && (
+        {showDetails && !loading && filteredProfessors.length > itemsPerPage && (
           <div className="d-flex justify-content-between align-items-center mt-3 px-3">
             <div className="text-muted small">
-              Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, professors.length)} of {professors.length}
+              Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredProfessors.length)} of {filteredProfessors.length}
             </div>
             <Pagination className="mb-0">
               <Pagination.Prev 

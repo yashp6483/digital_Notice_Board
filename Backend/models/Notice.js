@@ -35,6 +35,14 @@ const noticeSchema = new mongoose.Schema({
         type : Date,
         default : Date.now
     },
+    expiresAt : {
+        type : Date,
+        default : null
+    },
+    autoExpired : {
+        type : Boolean,
+        default : false
+    },
     createdBy : {
         type : mongoose.Schema.Types.ObjectId,
         ref : "User",

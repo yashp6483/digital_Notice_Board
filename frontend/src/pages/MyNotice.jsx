@@ -69,22 +69,28 @@ export default function MyNotice() {
 
                     <div className="row g-4 mb-3">
                         <StateCards
-                            title="My Total Notices"
+                            title="Total Notices"
                             value={noticeStats.total}
                             icon="fa-bullhorn"
                             color="primary"
                         />
                         <StateCards
-                            title="My Active Notices"
+                            title="Active Notices"
                             value={noticeStats.active}
                             icon="fa-circle-check"
                             color="info"
                         />
                         <StateCards
-                            title="My Inactive Notices"
+                            title="Inactive Notices"
                             value={noticeStats.inactive}
                             icon="fa-clock"
                             color="warning"
+                        />
+                        <StateCards
+                            title="Pending Approvals"
+                            value={noticeStats.pending}
+                            icon="fa-hourglass-half"
+                            color="danger"
                         />
                     </div>
 

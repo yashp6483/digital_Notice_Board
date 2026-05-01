@@ -3,15 +3,9 @@ import { useNavigate } from 'react-router-dom'
 import Sidebar from '../components/Sidebar';
 import TopHeader from '../components/Topheader';
 import StateCards from '../components/StateCards';
-import { fetchNotice } from '../services/noticeServices';
-import { fetchProfessor } from '../services/professorServices';
 import { fetchAdmins } from '../services/adminServices';
 import Swal from "sweetalert2";
 import {
-    calculateNoticeStats,
-    getInitialNoticeStats,
-    calculateProfessorStats,
-    getInitialProfessorStats,
     calculateAdminStats,
     getInitialAdminStats
 } from '../utils/statHelpers';
@@ -20,26 +14,14 @@ import AdminList from './AdminList';
 export default function AdminPage() {
     const navigate = useNavigate();
 
-    const [noticeStats, setNoticeStats] = useState(getInitialNoticeStats());
-    const [professorStats, setProfessorStats] = useState(getInitialProfessorStats());
     const [adminStats, setAdminStats] = useState(getInitialAdminStats());
     const [loading, setLoading] = useState(false);
 
     const loadPageStats = useCallback(async () => {
         setLoading(true);
         try {
-            const [noticesFromApi, professorsFromApi, adminsFromApi] = await Promise.all([
-                fetchNotice(),
-                fetchProfessor(),
-                fetchAdmins()
-            ]);
-
-            const normalizedNotices = noticesFromApi || [];
-            const normalizedProfessors = professorsFromApi || [];
+            const adminsFromApi = await fetchAdmins();
             const normalizedAdmins = adminsFromApi || [];
-
-            setNoticeStats(calculateNoticeStats(normalizedNotices));
-            setProfessorStats(calculateProfessorStats(normalizedProfessors));
             setAdminStats(calculateAdminStats(normalizedAdmins));
 
         } catch (error) {
@@ -78,11 +60,9 @@ export default function AdminPage() {
 
                     {/* STATS */}
                     <div className="row g-4 mb-3">
-                        <StateCards title="Total Notices" value={noticeStats.total} icon="fa-bullhorn" color="primary" />
-                        <StateCards title="Active Notices" value={noticeStats.active} icon="fa-circle-check" color="info" />
-                        <StateCards title="Inactive Notices" value={noticeStats.inactive} icon="fa-clock" color="warning" />
-                        <StateCards title="Total Professors" value={professorStats.total} icon="fa-user-tie" color="success" />
-                        <StateCards title="Total Admins" value={adminStats.total} icon="fa-user-shield" color="dark" />
+                        <StateCards title="Total Admins" value={adminStats.total} icon="fa-user-shield" color="primary" />
+                        <StateCards title="Active Admins" value={adminStats.active} icon="fa-shield-check" color="success" />
+                        <StateCards title="Inactive Admins" value={adminStats.inactive} icon="fa-user-slash" color="warning" />
                     </div>
 
                     {/* TABLE */}

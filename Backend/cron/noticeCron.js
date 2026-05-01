@@ -5,12 +5,13 @@ const initNoticeCron = (io) => {
     // Run every minute
     cron.schedule("* * * * *", async () => {
         try {
+            const now = new Date();
             // console.log("Checking for scheduled notices...");
             
             // Find notices that are scheduled and their publish time has passed
             const scheduledNotices = await Notice.find({
                 status: "scheduled",
-                publishedAt: { $lte: new Date() },
+                publishedAt: { $lte: now },
                 isDeleted: false
             }).populate("createdBy", "name");
 
@@ -18,7 +19,9 @@ const initNoticeCron = (io) => {
                 console.log(`Publishing ${scheduledNotices.length} scheduled notices.`);
                 
                 for (const notice of scheduledNotices) {
-                    notice.status = "active";
+                    const isExpired = notice.expiresAt && notice.expiresAt <= now;
+                    notice.status = isExpired ? "inactive" : "active";
+                    notice.autoExpired = Boolean(isExpired);
                     await notice.save();
 
                     const populatedNotice = notice.toObject();
@@ -35,10 +38,25 @@ const initNoticeCron = (io) => {
                     populatedNotice.type = type;
 
                     // Broadcast to all clients
-                    io.emit("new_notice", populatedNotice);
-                    console.log(`Notice "${notice.title}" is now active and broadcasted.`);
+                    io.emit("update_notice", populatedNotice);
+                    console.log(`Notice "${notice.title}" status updated by scheduler.`);
                 }
             }
+
+            // Auto-expire active notices
+            const expiredNotices = await Notice.find({
+                status: "active",
+                expiresAt: { $ne: null, $lte: now },
+                isDeleted: false
+            }).populate("createdBy", "name");
+
+            for (const notice of expiredNotices) {
+                notice.status = "inactive";
+                notice.autoExpired = true;
+                await notice.save();
+                io.emit("update_notice", notice.toObject());
+            }
+
         } catch (error) {
             console.error("Error in notice scheduling cron job:", error);
         }

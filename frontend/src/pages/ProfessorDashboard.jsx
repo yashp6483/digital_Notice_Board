@@ -12,7 +12,6 @@ import { categoryVariant } from "../constants/categoryVariant";
 export default function ProfessorDashboard() {
   const navigate = useNavigate();
 
-  const [noticeStats, setNoticeStats] = useState(getInitialNoticeStats());
   const [myNoticeStats, setMyNoticeStats] = useState(getInitialNoticeStats());
   const [notices, setNotices] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -29,7 +28,6 @@ export default function ProfessorDashboard() {
         .slice(0, 5);
 
       setNotices(latestFive);
-      setNoticeStats(calculateNoticeStats(normalizedNotices));
       setMyNoticeStats(calculateNoticeStats(normalizedMyNotices));
     } catch (error) {
       console.error(error);
@@ -72,10 +70,9 @@ export default function ProfessorDashboard() {
           </div>
 
           <div className="row g-4 mb-3">
-            <StateCards title="Total Notices" value={noticeStats.total} icon="fa-bullhorn" color="primary" />
-            <StateCards title="Active Notices" value={noticeStats.active} icon="fa-circle-check" color="info" />
-            <StateCards title="Inactive Notices" value={noticeStats.inactive} icon="fa-clock" color="warning" />
-            <StateCards title="My Total Notices" value={myNoticeStats.total} icon="fa-bookmark" color="secondary" />
+            <StateCards title="My Total Notices" value={myNoticeStats.total} icon="fa-bookmark" color="primary" />
+            <StateCards title="My Active Notices" value={myNoticeStats.active} icon="fa-circle-check" color="info" />
+            <StateCards title="My Inactive Notices" value={myNoticeStats.inactive} icon="fa-clock" color="warning" />
             <StateCards title="My Pending Approvals" value={myNoticeStats.pending} icon="fa-hourglass-half" color="danger" />
           </div>
 

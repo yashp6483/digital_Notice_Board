@@ -5,35 +5,25 @@ import TopHeader from "../components/Topheader";
 import StateCards from "../components/StateCards";
 import NoticeTable from "../components/NoticeTable";
 import { fetchNotice } from "../services/noticeServices";
-import { fetchProfessor } from "../services/professorServices";
 import Swal from "sweetalert2";
 import {
     calculateNoticeStats,
-    getInitialNoticeStats,
-    calculateProfessorStats,
-    getInitialProfessorStats,
+    getInitialNoticeStats
 } from "../utils/statHelpers";
 
 export default function AdminNotice() {
     const navigate = useNavigate();
 
     const [noticeStats, setNoticeStats] = useState(getInitialNoticeStats());
-    const [professorStats, setProfessorStats] = useState(getInitialProfessorStats());
     const [loading, setLoading] = useState(false);
 
     const loadPageStats = useCallback(async () => {
         setLoading(true);
         try {
-            const [noticesFromApi, professorsFromApi] = await Promise.all([
-                fetchNotice(),
-                fetchProfessor(),
-            ]);
-
+            const noticesFromApi = await fetchNotice();
             const normalizedNotices = noticesFromApi || [];
-            const normalizedProfessors = professorsFromApi || [];
 
             setNoticeStats(calculateNoticeStats(normalizedNotices));
-            setProfessorStats(calculateProfessorStats(normalizedProfessors));
         } catch (error) {
             console.error(error);
             if (error.status === 401 || error.status === 403) {
@@ -74,7 +64,6 @@ export default function AdminNotice() {
                         <StateCards title="Active Notices" value={noticeStats.active} icon="fa-circle-check" color="info" />
                         <StateCards title="Inactive Notices" value={noticeStats.inactive} icon="fa-clock" color="warning" />
                         <StateCards title="Pending Approvals" value={noticeStats.pending} icon="fa-hourglass-half" color="danger" />
-                        <StateCards title="Total Professors" value={professorStats.total} icon="fa-user-tie" color="success" />
                     </div>
 
                     {/* TABLE */}
