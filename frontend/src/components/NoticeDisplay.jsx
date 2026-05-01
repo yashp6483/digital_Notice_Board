@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import io from "socket.io-client";
 import { SOCKET_URL, buildApiUrl } from "../config/api";
 
@@ -14,6 +14,8 @@ const NoticeDisplay = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const descriptionContainerRef = useRef(null);
+  const [isDescriptionOverflowing, setIsDescriptionOverflowing] = useState(false);
 
   const [settings, setSettings] = useState({
     slideTime: 10000,
@@ -76,6 +78,52 @@ const NoticeDisplay = () => {
     return () => clearInterval(interval);
   }, [notices.length, settings.autoSlide, settings.slideTime]);
 
+  useEffect(() => {
+    const updateOverflowState = () => {
+      const el = descriptionContainerRef.current;
+      if (!el) return;
+      setIsDescriptionOverflowing(el.scrollHeight > el.clientHeight + 2);
+    };
+
+    updateOverflowState();
+    window.addEventListener("resize", updateOverflowState);
+    return () => window.removeEventListener("resize", updateOverflowState);
+  }, [settings.fontSize, currentIndex, notices]);
+
+  useEffect(() => {
+    const el = descriptionContainerRef.current;
+    if (!el || !isDescriptionOverflowing) return;
+
+    let rafId;
+    let pauseUntil = 0;
+    const speedPx = 0.55;
+
+    const animate = (time) => {
+      if (time < pauseUntil) {
+        rafId = requestAnimationFrame(animate);
+        return;
+      }
+
+      const maxScroll = el.scrollHeight - el.clientHeight;
+      if (maxScroll <= 0) return;
+
+      if (el.scrollTop >= maxScroll - 1) {
+        pauseUntil = time + 1800;
+        el.scrollTop = 0;
+      } else {
+        el.scrollTop += speedPx;
+      }
+      rafId = requestAnimationFrame(animate);
+    };
+
+    el.scrollTop = 0;
+    rafId = requestAnimationFrame(animate);
+
+    return () => {
+      if (rafId) cancelAnimationFrame(rafId);
+    };
+  }, [isDescriptionOverflowing, currentIndex]);
+
   if (notices.length === 0) {
     return (
       <div className="vh-100 vw-100 d-flex flex-column justify-content-center align-items-center bg-dark text-white">
@@ -97,6 +145,21 @@ const NoticeDisplay = () => {
       case "small": return "clamp(0.9rem, 1vw, 1.1rem)";
       default: return "clamp(1.1rem, 1.4vw, 1.3rem)";
     }
+  };
+
+  const getCompactFontSize = () => {
+    switch (settings.fontSize) {
+      case "large": return "clamp(1rem, 1.5vw, 1.25rem)";
+      case "small": return "clamp(0.78rem, 0.95vw, 0.95rem)";
+      default: return "clamp(0.88rem, 1.1vw, 1.05rem)";
+    }
+  };
+
+  const getTitleSize = () => {
+    const titleLength = (notice?.title || "").trim().length;
+    if (titleLength > 110) return "clamp(1.35rem, 2.2vw, 2rem)";
+    if (titleLength > 70) return "clamp(1.6rem, 2.8vw, 2.5rem)";
+    return "clamp(2rem, 4vw, 3.5rem)";
   };
 
   return (
@@ -141,13 +204,24 @@ const NoticeDisplay = () => {
               </div>
 
               <div className="flex-grow-1 overflow-hidden d-flex flex-column">
-                <h1 className="fw-black mb-3 text-white lh-1-2" style={{ fontSize: "clamp(2rem, 4vw, 3.5rem)" }}>
+                <h1 className="fw-black mb-3 text-white lh-1-2" style={{ fontSize: getTitleSize(), overflowWrap: "anywhere", wordBreak: "break-word" }}>
                   {notice.title}
                 </h1>
                 <div className="glass-line mb-4"></div>
                 
-                <div className="notice-description-container overflow-hidden">
-                  <p className="text-white opacity-90 fw-normal m-0" style={{ fontSize: getFontSize(), lineHeight: "1.6" }}>
+                <div
+                  ref={descriptionContainerRef}
+                  className={`notice-description-container ${isDescriptionOverflowing ? "overflow-y-auto" : "overflow-hidden"} pe-2`}
+                >
+                  <p
+                    className="text-white opacity-90 fw-normal m-0"
+                    style={{
+                      fontSize: isDescriptionOverflowing ? getCompactFontSize() : getFontSize(),
+                      lineHeight: "1.6",
+                      wordBreak: "break-word",
+                      overflowWrap: "anywhere"
+                    }}
+                  >
                     {notice.description}
                   </p>
                 </div>
@@ -247,6 +321,22 @@ const NoticeDisplay = () => {
         .glass-line { height: 4px; width: 60px; background: #06b6d4; border-radius: 2px; box-shadow: 0 0 15px rgba(6, 182, 212, 0.5); }
         .scale-98 { transform: scale(0.98); }
         .blur-sm { filter: blur(4px); }
+        .notice-description-container {
+          min-height: 0;
+          flex: 1;
+          scrollbar-width: thin;
+          scrollbar-color: rgba(34, 211, 238, 0.55) transparent;
+        }
+        .notice-description-container::-webkit-scrollbar {
+          width: 6px;
+        }
+        .notice-description-container::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .notice-description-container::-webkit-scrollbar-thumb {
+          background: rgba(34, 211, 238, 0.55);
+          border-radius: 20px;
+        }
 
         .ticker-wrapper-glass { width: 100%; overflow: hidden; }
         .ticker-content-glass {
