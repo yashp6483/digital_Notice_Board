@@ -1,4 +1,4 @@
-name: MERN Socket.IO CI/CD
+name: MERN CI/CD
 
 on:
   push:
@@ -8,6 +8,7 @@ on:
 jobs:
 
   frontend:
+    name: Frontend Build
     runs-on: ubuntu-latest
 
     defaults:
@@ -15,30 +16,39 @@ jobs:
         working-directory: frontend
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      - run: npm install
+      - name: Install Dependencies
+        run: npm install
 
-      - run: npm run build
+      - name: Build Frontend
+        run: npm run build
 
   backend:
+    name: Backend Check
     runs-on: ubuntu-latest
 
     defaults:
       run:
-        working-directory: backend
+        working-directory: Backend
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      - run: npm install
+      - name: Install Dependencies
+        run: npm install
 
-      - run: npm test --if-present
+      - name: Run Tests
+        run: npm test --if-present
